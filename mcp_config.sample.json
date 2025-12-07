@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "pm-mcp": {
+      "command": "/Users/choetaeyeong/projects/PM-MCP/.venv/bin/python",
+      "args": ["-m", "mcp_server.mcp_app"],
+      "env": {
+        "PYTHONPATH": "/Users/choetaeyeong/projects/PM-MCP",
+        "OBSIDIAN_VAULT_PATH": "/Users/choetaeyeong/projects/PM-MCP/obsidian_vault"
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "schema": {
+    "ticker": [],
+    "company": [],
+    "sector": [],
+    "industry": [],
+    "event": [],
+    "metric": [],
+    "catalyst": [],
+    "risk": [],
+    "sentiment": []
+  },
+  "rules": [
+    "Output only one JSON object.",
+    "All keys must be arrays.",
+    "Deduplicate semantically identical strings.",
+    "Preserve original surface forms when possible."
+  ]
+}

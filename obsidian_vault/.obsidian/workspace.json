@@ -1,0 +1,195 @@
+{
+  "main": {
+    "id": "ea0125af9a75b041",
+    "type": "split",
+    "children": [
+      {
+        "id": "7b3dda3782d4af55",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b19696ea5811b9a5",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "새 탭"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "a7e426fc60821b45",
+    "type": "split",
+    "children": [
+      {
+        "id": "f157c328532f735e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "21e2d82177ebab92",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "파일 탐색기"
+            }
+          },
+          {
+            "id": "8d2db1a693a6efbd",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "검색"
+            }
+          },
+          {
+            "id": "34a7711901137d25",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "북마크"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "469768cbfbfa01ce",
+    "type": "split",
+    "children": [
+      {
+        "id": "a1ba62eeef8c16d3",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fa0560a46f6c3f62",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "백링크"
+            }
+          },
+          {
+            "id": "f2bfca12b317cc73",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "나가는 링크"
+            }
+          },
+          {
+            "id": "6a7e093d641c3c64",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "태그"
+            }
+          },
+          {
+            "id": "b4d5d22aaa58a0e9",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "개요"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:빠른 전환기 열기": false,
+      "graph:그래프 뷰 열기": false,
+      "canvas:새 캔버스 만들기": false,
+      "daily-notes:오늘의 일일 노트 열기": false,
+      "templates:템플릿 삽입": false,
+      "command-palette:명령어 팔레트 열기": false,
+      "bases:새 베이스 생성하기": false
+    }
+  },
+  "active": "b19696ea5811b9a5",
+  "lastOpenFiles": [
+    "Markets/제약/제약 대기업 - Merck (MRK) 정밀분석/Overview 2025-11-12.md",
+    "GLP-1 비만치료제 Top5 랭킹.md",
+    "Markets/제약/제약 대기업 - Merck (MRK) 정밀분석",
+    "Markets/제약",
+    "Markets/Rare Disease Drugs/Overview 2025-11-12.md",
+    "Markets/Rare Disease Drugs",
+    "Markets/Biotech Pharmaceuticals/Dip Candidates 2025-11-06.md",
+    "Markets/Biotech Pharmaceuticals",
+    "Portfolios/Personal/Overview 2025-11-06.md",
+    "Portfolios/Personal",
+    "Portfolio Events Calendar 2025-2026.md",
+    "Portfolio Analysis - 2025-11-06.md",
+    "Portfolios/GLP-1 Portfolio Strategy 2025-11-04.md",
+    "Markets/GLP-1 Portfolio Analysis/Dip Candidates 2025-11-04.md",
+    "Markets/GLP-1 Portfolio Analysis",
+    "Markets/Amgen AMGN Deep Dive/Overview 2025-11-04.md",
+    "Markets/Amgen AMGN Deep Dive",
+    "Markets/Eli Lilly LLY Deep Dive/Overview 2025-11-04.md",
+    "Markets/Eli Lilly LLY Deep Dive",
+    "Markets/Healthcare GLP-1/Weekly Snapshot.md",
+    "Markets/Healthcare GLP-1",
+    "NVO_Deep_Analysis_2025.md",
+    "Markets/헬스케어 혁신 - GLP-1 비만치료제 & 디지털 헬스/Weekly Snapshot.md",
+    "Markets/AI/Weekly Snapshot.md",
+    "Portfolios/Phase Report.md",
+    "Images/multi_AAPL_MSFT_NVDA_180d.png",
+    "Images/multi_AAPL_MSFT_NVDA_90d.png"
+  ]
+}
