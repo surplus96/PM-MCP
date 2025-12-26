@@ -1,0 +1,2 @@
+ticker,sector,score,base_score,dip_bonus,valuation,growth,profitability,quality,drawdown180,mom1,mom3,mom6,mom12,pe,pb,eps,returnOnEquity,revenueGrowth,profitMargins,eventScore
+RARE,Healthcare,0.2142,0.1714,0.0428,0.3,0.2143,0.0,0.1714,0.20173738109793507,0.013635775468321842,0.13598904112962718,-0.0859352559731531,,,348.21054,-5.93,-3.13433,0.147,-0.91949,0.5

@@ -1,0 +1,2 @@
+ticker,sector,score,base_score,dip_bonus,valuation,growth,profitability,quality,drawdown180,mom1,mom3,mom6,mom12,pe,pb,eps,returnOnEquity,revenueGrowth,profitMargins,eventScore
+SEDG,Technology,0.4323,0.3589,0.0734,0.3,0.5,0.1667,0.4691,0.20273249330977938,-0.022690441442491327,0.13097844839125372,0.7427745619598429,,,4.49162,-9.63,-0.78094,0.445,-0.53646,0.5

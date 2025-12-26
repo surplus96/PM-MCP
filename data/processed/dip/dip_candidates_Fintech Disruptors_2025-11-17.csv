@@ -1,0 +1,2 @@
+ticker,sector,score,base_score,dip_bonus,valuation,growth,profitability,quality,drawdown180,mom1,mom3,mom6,mom12,pe,pb,eps,returnOnEquity,revenueGrowth,profitMargins,eventScore
+HOOD,Financial Services,0.8172,0.7779,0.0393,0.24,1.0,1.0,0.8714,0.1965105955301138,-0.057039515458582324,0.13953488372093026,0.9060215714701703,,51.041664,12.8501,2.4,0.27816,1.0,0.52188,0.5

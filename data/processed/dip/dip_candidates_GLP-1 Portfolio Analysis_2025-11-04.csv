@@ -1,0 +1,2 @@
+ticker,sector,score,base_score,dip_bonus,valuation,growth,profitability,quality,drawdown180,mom1,mom3,mom6,mom12,pe,pb,eps,returnOnEquity,revenueGrowth,profitMargins,eventScore
+NVO,Healthcare,0.585,0.525,0.06,1.0,0.25,0.5,0.35,0.45133186747844434,-0.176697412337108,0.08219478744915865,-0.2591642791960145,,12.755845,1.2984163,3.85,0.79168,0.129,0.35606,0.5
