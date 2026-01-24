@@ -248,3 +248,67 @@ def analyze_selection(theme: str, tickers: List[str]) -> str:
         lines.append(f"- {t}: {len(f)} filings in recent submissions")
     lines.append("\n> Next: call present_theme with with_images=True to generate visuals and a full note.")
     return "\n".join(lines)
+
+
+# ===== 비동기 버전 함수들 =====
+import asyncio
+from .async_utils import parallel_map
+from .analytics import rank_tickers_with_fundamentals_async
+
+
+async def propose_themes_async(lookback_days: int = 7, max_themes: int = 5) -> List[str]:
+    """테마 추천의 비동기 버전 - 뉴스 검색 병렬화"""
+    candidates = list(ETF_MAP.keys())
+
+    async def get_news_count(theme: str) -> tuple:
+        res = search_news([f"{theme} stocks"], lookback_days=lookback_days, max_results=5)
+        hits = sum(len(x.get("hits", []) or []) for x in res)
+        return (theme, hits)
+
+    # 병렬로 뉴스 검색
+    density = await parallel_map(get_news_count, candidates, max_concurrent=5)
+
+    # 예외 처리
+    density = [d for d in density if isinstance(d, tuple)]
+    density.sort(key=lambda x: x[1], reverse=True)
+    return [d[0] for d in density[:max_themes]]
+
+
+async def explore_theme_async(theme: str, lookback_days: int = 7) -> str:
+    """테마 탐색의 비동기 버전"""
+    tickers = propose_tickers(theme)
+    # present_theme_overview는 내부적으로 동기이지만 빠름
+    md = present_theme_overview(theme, tickers, with_images=False)
+    return md
+
+
+async def analyze_selection_async(theme: str, tickers: List[str]) -> str:
+    """종목 분석의 비동기 버전 - 랭킹과 공시 병렬 조회"""
+
+    # 비동기 랭킹과 공시를 병렬로 실행
+    ranked_task = rank_tickers_with_fundamentals_async(
+        tickers, dip_weight=0.12, use_dip_bonus=True, max_concurrent=5
+    )
+    filings_task = parallel_map(
+        lambda t: fetch_recent_filings(t, limit=5),
+        tickers[:5],
+        max_concurrent=3
+    )
+
+    ranked, filings_results = await asyncio.gather(ranked_task, filings_task)
+
+    lines = ["## Analysis Summary"]
+    lines.append("\n### Rank (Top 5)")
+    for r in ranked[:5]:
+        lines.append(
+            f"- {r['ticker']}: score={r['score']:.3f} (base={r['base_score']:.3f}, dip={r['dip_bonus']:.3f}) "
+            f"| PE={r.get('pe')}, PB={r.get('pb')}, EPS={r.get('eps')}"
+        )
+
+    lines.append("\n### Recent Filings Counts")
+    for i, t in enumerate(tickers[:5]):
+        filings = filings_results[i] if i < len(filings_results) and isinstance(filings_results[i], list) else []
+        lines.append(f"- {t}: {len(filings)} filings in recent submissions")
+
+    lines.append("\n> Next: call present_theme with with_images=True to generate visuals and a full note.")
+    return "\n".join(lines)

@@ -1,14 +1,22 @@
 from __future__ import annotations
 from typing import List, Dict, Optional
 import os
+import logging
 import requests
 from .llm import summarize_items_perplexity
+from .cache_manager import cache_manager, TTL
+from .resilience import (
+    retry_with_backoff, Timeout, RetryConfig,
+    circuit_sec, CircuitOpenError
+)
+
+logger = logging.getLogger(__name__)
 
 SEC_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 
 _session = requests.Session()
-_ticker_cache: Dict[str, str] = {}
+_ticker_cache: Dict[str, str] = {}  # 인메모리 캐시 (CIK 매핑용)
 
 
 def _ua() -> str:
@@ -23,20 +31,37 @@ def _headers() -> Dict[str, str]:
     }
 
 
+@retry_with_backoff(
+    attempts=RetryConfig.SEC_EDGAR["attempts"],
+    min_wait=RetryConfig.SEC_EDGAR["min_wait"],
+    max_wait=RetryConfig.SEC_EDGAR["max_wait"]
+)
+def _fetch_sec_tickers() -> dict:
+    """SEC 티커 목록 조회 (재시도 + 서킷 브레이커)"""
+    def _do_request():
+        resp = _session.get(SEC_TICKERS_URL, headers=_headers(), timeout=Timeout.SEC_EDGAR)
+        resp.raise_for_status()
+        return resp.json()
+    return circuit_sec.call(_do_request)
+
+
 def get_cik_from_ticker(ticker: str) -> Optional[str]:
     t = (ticker or "").upper().strip()
     if not t:
         return None
     if t in _ticker_cache:
         return _ticker_cache[t]
-    resp = _session.get(SEC_TICKERS_URL, headers=_headers(), timeout=20)
-    resp.raise_for_status()
-    data = resp.json()
-    for _, row in data.items():
-        if (row.get("ticker") or "").upper() == t:
-            cik_str = str(row.get("cik_str"))
-            _ticker_cache[t] = cik_str
-            return cik_str
+    try:
+        data = _fetch_sec_tickers()
+        for _, row in data.items():
+            if (row.get("ticker") or "").upper() == t:
+                cik_str = str(row.get("cik_str"))
+                _ticker_cache[t] = cik_str
+                return cik_str
+    except CircuitOpenError:
+        logger.warning(f"SEC circuit open, cannot fetch CIK for {ticker}")
+    except Exception as e:
+        logger.warning(f"Failed to fetch CIK for {ticker}: {e}")
     return None
 
 
@@ -44,38 +69,86 @@ def _zero_pad_10(cik_str: str) -> str:
     return str(cik_str).zfill(10)
 
 
-def fetch_recent_filings(ticker: str, forms: Optional[List[str]] = None, limit: int = 10) -> List[Dict]:
+@retry_with_backoff(
+    attempts=RetryConfig.SEC_EDGAR["attempts"],
+    min_wait=RetryConfig.SEC_EDGAR["min_wait"],
+    max_wait=RetryConfig.SEC_EDGAR["max_wait"]
+)
+def _fetch_sec_submissions(cik: str) -> dict:
+    """SEC 제출물 조회 (재시도 + 서킷 브레이커)"""
+    def _do_request():
+        resp = _session.get(
+            SEC_SUBMISSIONS_URL.format(cik=_zero_pad_10(cik)),
+            headers=_headers(),
+            timeout=Timeout.SEC_EDGAR
+        )
+        resp.raise_for_status()
+        return resp.json()
+    return circuit_sec.call(_do_request)
+
+
+def fetch_recent_filings(ticker: str, forms: Optional[List[str]] = None, limit: int = 10, use_cache: bool = True) -> List[Dict]:
+    """SEC 공시 조회 (6시간 캐시, 재시도 + 서킷 브레이커 적용)"""
     forms = forms or ["8-K", "10-Q", "10-K"]
+
+    # 캐시 키 생성
+    forms_key = ",".join(sorted(forms))
+    cache_key = f"filings:{ticker}:{forms_key}:{limit}"
+
+    if use_cache:
+        cached_result = cache_manager.get(cache_key)
+        if cached_result is not None:
+            return cached_result
+
     cik_str = get_cik_from_ticker(ticker)
     if not cik_str:
         return []
-    resp = _session.get(SEC_SUBMISSIONS_URL.format(cik=_zero_pad_10(cik_str)), headers=_headers(), timeout=20)
-    resp.raise_for_status()
-    j = resp.json()
-    recent = j.get("filings", {}).get("recent", {})
-    out: List[Dict] = []
-    for i, form in enumerate(recent.get("form", [])):
-        if form not in forms:
-            continue
-        acc = (recent.get("accessionNumber", [""])[i] or "").replace("-", "")
-        doc = recent.get("primaryDocument", [""])[i]
-        filing_date = recent.get("filingDate", [""])[i]
-        report_date = recent.get("reportDate", [""])[i]
-        url = f"https://www.sec.gov/Archives/edgar/data/{int(cik_str)}/{acc}/{doc}"
-        out.append({
-            "ticker": ticker,
-            "cik": cik_str,
-            "form": form,
-            "filingDate": filing_date,
-            "reportDate": report_date,
-            "accessionNumber": recent.get("accessionNumber", [""])[i],
-            "primaryDocument": doc,
-            "url": url,
-            "title": recent.get("primaryDocDescription", [""])[i],
-        })
-        if len(out) >= limit:
-            break
-    return out
+
+    try:
+        j = _fetch_sec_submissions(cik_str)
+        recent = j.get("filings", {}).get("recent", {})
+        out: List[Dict] = []
+        for i, form in enumerate(recent.get("form", [])):
+            if form not in forms:
+                continue
+            acc = (recent.get("accessionNumber", [""])[i] or "").replace("-", "")
+            doc = recent.get("primaryDocument", [""])[i]
+            filing_date = recent.get("filingDate", [""])[i]
+            report_date = recent.get("reportDate", [""])[i]
+            url = f"https://www.sec.gov/Archives/edgar/data/{int(cik_str)}/{acc}/{doc}"
+            out.append({
+                "ticker": ticker,
+                "cik": cik_str,
+                "form": form,
+                "filingDate": filing_date,
+                "reportDate": report_date,
+                "accessionNumber": recent.get("accessionNumber", [""])[i],
+                "primaryDocument": doc,
+                "url": url,
+                "title": recent.get("primaryDocDescription", [""])[i],
+            })
+            if len(out) >= limit:
+                break
+
+        # 결과 캐싱
+        if use_cache and out:
+            cache_manager.set(cache_key, out, TTL.FILING)
+
+        logger.debug(f"Fetched {len(out)} filings for {ticker}")
+        return out
+    except CircuitOpenError:
+        logger.warning(f"SEC circuit open for {ticker}, using cached data")
+        stale_data = cache_manager.get(cache_key)
+        if stale_data:
+            return stale_data
+        return []
+    except Exception as e:
+        # 캐시된 데이터 폴백
+        logger.warning(f"Failed to fetch filings for {ticker}: {e}, using cached data")
+        stale_data = cache_manager.get(cache_key)
+        if stale_data:
+            return stale_data
+        return []
 
 
 from mcp_server.config import EVENT_WEIGHTS_PATH

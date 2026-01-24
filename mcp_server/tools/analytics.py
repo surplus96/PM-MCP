@@ -227,3 +227,130 @@ def rank_candidates(
         ranked.append(item)
     ranked.sort(key=lambda x: x["score"], reverse=True)
     return ranked
+
+
+# ===== 비동기 버전 함수들 =====
+
+async def rank_tickers_with_fundamentals_async(
+    tickers: List[str],
+    weights: Optional[Dict[str, float]] = None,
+    dip_weight: float = 0.12,
+    use_dip_bonus: bool = True,
+    max_concurrent: int = 5,
+) -> List[Dict]:
+    """rank_tickers_with_fundamentals의 비동기 버전 - 병렬 데이터 수집으로 속도 향상
+
+    Args:
+        tickers: 분석할 티커 리스트
+        weights: 팩터 가중치
+        dip_weight: 딥 보너스 가중치
+        use_dip_bonus: 딥 보너스 사용 여부
+        max_concurrent: 최대 동시 요청 수
+
+    Returns:
+        랭킹된 티커 리스트 (score 내림차순)
+    """
+    from mcp_server.tools.async_utils import parallel_map
+
+    weights = weights or DEFAULT_WEIGHTS
+    sector_weights_map = _parse_sector_weights(SECTOR_FACTOR_WEIGHTS)
+
+    # 병렬로 데이터 수집
+    fundamentals, momentum = await asyncio.gather(
+        parallel_map(get_fundamentals_snapshot, tickers, max_concurrent),
+        parallel_map(get_momentum_metrics, tickers, max_concurrent),
+    )
+
+    # 이벤트 스코어 병렬 수집
+    try:
+        from .filings import keyword_event_score
+        ev_raw = await parallel_map(keyword_event_score, tickers, max_concurrent=3)
+    except Exception:
+        ev_raw = [0.5] * len(tickers)
+
+    # 딥 보너스 병렬 계산
+    if use_dip_bonus:
+        dip_bonuses = await parallel_map(compute_dip_bonus_by_prices, tickers, max_concurrent)
+    else:
+        dip_bonuses = [0.0] * len(tickers)
+
+    # 나머지 계산 로직 (동기 - CPU bound)
+    pe = [f.get("pe") for f in fundamentals]
+    pb = [f.get("pb") for f in fundamentals]
+    eps = [f.get("eps") for f in fundamentals]
+    rev_g = [f.get("revenueGrowth") for f in fundamentals]
+    pm = [f.get("profitMargins") for f in fundamentals]
+    roe = [f.get("returnOnEquity") for f in fundamentals]
+    sectors = [f.get("sector") for f in fundamentals]
+
+    # Normalize to 0..1
+    if SCORE_SECTOR_NEUTRAL:
+        val_pe = _rank_normalized_by_group(pe, sectors, higher_is_better=False)
+        val_pb = _rank_normalized_by_group(pb, sectors, higher_is_better=False)
+    else:
+        val_pe = _rank_normalized(pe, higher_is_better=False)
+        val_pb = _rank_normalized(pb, higher_is_better=False)
+
+    valuation = [_combine_scores([(val_pe[i], 0.6), (val_pb[i], 0.4)]) for i in range(len(tickers))]
+
+    grow_eps = _rank_normalized(eps, higher_is_better=True)
+    grow_rev = _rank_normalized(rev_g, higher_is_better=True)
+    growth = [_combine_scores([(grow_eps[i], 0.5), (grow_rev[i], 0.5)]) for i in range(len(tickers))]
+
+    prof_pm = _rank_normalized(pm, higher_is_better=True)
+    prof_roe = _rank_normalized(roe, higher_is_better=True)
+    profitability = [_combine_scores([(prof_pm[i], 0.5), (prof_roe[i], 0.5)]) for i in range(len(tickers))]
+
+    # Momentum composite
+    mom_raw = [
+        ((m.get("mom3") or 0.0) + (m.get("mom6") or 0.0) + (m.get("mom12") or 0.0)) / 3.0 if isinstance(m, dict) else 0.0
+        for m in momentum
+    ]
+    mom_score = _rank_normalized(mom_raw, higher_is_better=True)
+    ev_score = _rank_normalized(ev_raw, higher_is_better=True)
+
+    # Quality
+    quality = [_combine_scores([(profitability[i], 0.5), (mom_score[i], 0.3), (ev_score[i], 0.2)]) for i in range(len(tickers))]
+
+    # 최종 랭킹 계산
+    ranked: List[Dict] = []
+    for i, t in enumerate(tickers):
+        sector = fundamentals[i].get("sector")
+        w = dict(weights)
+        if sector and isinstance(sector_weights_map.get(sector), dict):
+            w.update({k: float(v) for k, v in sector_weights_map[sector].items() if k in w})
+
+        base = (
+            float(valuation[i]) * w.get("valuation", 0.25)
+            + float(growth[i]) * w.get("growth", 0.25)
+            + float(profitability[i]) * w.get("profitability", 0.25)
+            + float(quality[i]) * w.get("quality", 0.25)
+        )
+
+        dip_bonus = dip_weight * dip_bonuses[i] if use_dip_bonus else 0.0
+
+        m = momentum[i] if isinstance(momentum[i], dict) else {}
+        item = {
+            "ticker": t,
+            "sector": sector,
+            "valuation": round(valuation[i], 4),
+            "growth": round(growth[i], 4),
+            "profitability": round(profitability[i], 4),
+            "quality": round(quality[i], 4),
+            "dip_bonus": round(dip_bonus, 4),
+            "base_score": round(base, 4),
+            "score": round(base + dip_bonus, 4),
+            "pe": pe[i], "pb": pb[i], "eps": eps[i],
+            "revenueGrowth": rev_g[i], "profitMargins": pm[i], "returnOnEquity": roe[i],
+            "mom1": m.get("mom1"), "mom3": m.get("mom3"), "mom6": m.get("mom6"), "mom12": m.get("mom12"),
+            "mom": ((m.get("mom3") or 0.0) + (m.get("mom6") or 0.0) + (m.get("mom12") or 0.0)) / 3.0 if m else None,
+            "eventScore": ev_raw[i]
+        }
+        ranked.append(item)
+
+    ranked.sort(key=lambda x: x["score"], reverse=True)
+    return ranked
+
+
+# asyncio import (비동기 함수용)
+import asyncio

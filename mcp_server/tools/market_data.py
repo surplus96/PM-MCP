@@ -4,14 +4,41 @@ import yfinance as yf
 from datetime import datetime
 from typing import Optional, Dict, Any, Tuple
 import os
+import logging
 from mcp_server.config import PROCESSED_PATH
+from mcp_server.tools.cache_manager import cached, TTL, cache_manager
+from mcp_server.tools.resilience import (
+    retry_with_backoff, Timeout, RetryConfig,
+    circuit_yfinance, CircuitOpenError
+)
+
+logger = logging.getLogger(__name__)
+
+
+@retry_with_backoff(
+    attempts=RetryConfig.YFINANCE["attempts"],
+    min_wait=RetryConfig.YFINANCE["min_wait"],
+    max_wait=RetryConfig.YFINANCE["max_wait"]
+)
+def _download_prices(ticker: str, start: str, end: str, interval: str) -> pd.DataFrame:
+    """yfinance 가격 다운로드 (재시도 + 서킷 브레이커)"""
+    def _do_download():
+        return yf.download(ticker, start=start, end=end, interval=interval, auto_adjust=True, progress=False)
+    return circuit_yfinance.call(_do_download)
 
 
 def get_prices(ticker: str, start: Optional[str] = None, end: Optional[str] = None, interval: str = "1d") -> pd.DataFrame:
     start = start or (datetime.now().replace(year=datetime.now().year - 1).strftime('%Y-%m-%d'))
     end = end or datetime.now().strftime('%Y-%m-%d')
-    data = yf.download(ticker, start=start, end=end, interval=interval, auto_adjust=True, progress=False)
-    return data.reset_index()
+    try:
+        data = _download_prices(ticker, start, end, interval)
+        return data.reset_index()
+    except CircuitOpenError:
+        logger.warning(f"yfinance circuit open for {ticker}, returning empty DataFrame")
+        return pd.DataFrame()
+    except Exception as e:
+        logger.warning(f"Failed to download prices for {ticker}: {e}")
+        return pd.DataFrame()
 
 
 def _safe_get(info: Dict[str, Any], key: str, default=None):
@@ -26,65 +53,90 @@ def _safe_get(info: Dict[str, Any], key: str, default=None):
         return default
 
 
+@cached(ttl=TTL.FUNDAMENTAL, prefix="fundamentals")
 def get_fundamentals_snapshot(ticker: str) -> dict:
-    tk = yf.Ticker(ticker)
-    info = {}
+    """펀더멘털 스냅샷 조회 (24시간 캐시, 서킷 브레이커 적용)"""
     try:
-        info = tk.info if isinstance(getattr(tk, 'info', None), dict) else {}
-    except Exception:
-        info = {}
+        def _fetch_info():
+            tk = yf.Ticker(ticker)
+            info = {}
+            try:
+                info = tk.info if isinstance(getattr(tk, 'info', None), dict) else {}
+            except Exception:
+                info = {}
 
-    fast = getattr(tk, 'fast_info', None)
-    def _fast_get(name: str):
-        try:
-            return getattr(fast, name)
-        except Exception:
-            return None
-    out = {
-        "ticker": ticker,
-        "market_cap": _fast_get('market_cap') if fast else None,
-        "shares": _fast_get('shares') if fast else None,
-        "currency": _fast_get('currency') if fast else None,
-        "last_price": _fast_get('last_price') if fast else None,
-        "sector": _safe_get(info, 'sector'),
-        "industry": _safe_get(info, 'industry'),
-        "pe": _safe_get(info, 'trailingPE'),
-        "pb": _safe_get(info, 'priceToBook'),
-        "eps": _safe_get(info, 'trailingEps'),
-        "forwardEps": _safe_get(info, 'forwardEps'),
-        "revenueGrowth": _safe_get(info, 'revenueGrowth'),
-        "earningsQuarterlyGrowth": _safe_get(info, 'earningsQuarterlyGrowth'),
-        "profitMargins": _safe_get(info, 'profitMargins'),
-        "returnOnEquity": _safe_get(info, 'returnOnEquity'),
-        "returnOnAssets": _safe_get(info, 'returnOnAssets'),
-        "roic": _safe_get(info, 'returnOnCapitalEmployed'),
-    }
-    try:
-        cf = getattr(tk, 'cashflow', None)
-        if cf is not None and not cf.empty:
-            for label in ("Free Cash Flow", "FreeCashFlow"):
-                if label in cf.index:
-                    fcf_series = cf.loc[label]
-                    out["freeCashFlow"] = float(fcf_series.iloc[0]) if len(fcf_series) else None
-                    break
-    except Exception:
-        pass
-    return out
+            fast = getattr(tk, 'fast_info', None)
+            def _fast_get(name: str):
+                try:
+                    return getattr(fast, name)
+                except Exception:
+                    return None
+            out = {
+                "ticker": ticker,
+                "market_cap": _fast_get('market_cap') if fast else None,
+                "shares": _fast_get('shares') if fast else None,
+                "currency": _fast_get('currency') if fast else None,
+                "last_price": _fast_get('last_price') if fast else None,
+                "sector": _safe_get(info, 'sector'),
+                "industry": _safe_get(info, 'industry'),
+                "pe": _safe_get(info, 'trailingPE'),
+                "pb": _safe_get(info, 'priceToBook'),
+                "eps": _safe_get(info, 'trailingEps'),
+                "forwardEps": _safe_get(info, 'forwardEps'),
+                "revenueGrowth": _safe_get(info, 'revenueGrowth'),
+                "earningsQuarterlyGrowth": _safe_get(info, 'earningsQuarterlyGrowth'),
+                "profitMargins": _safe_get(info, 'profitMargins'),
+                "returnOnEquity": _safe_get(info, 'returnOnEquity'),
+                "returnOnAssets": _safe_get(info, 'returnOnAssets'),
+                "roic": _safe_get(info, 'returnOnCapitalEmployed'),
+            }
+            try:
+                cf = getattr(tk, 'cashflow', None)
+                if cf is not None and not cf.empty:
+                    for label in ("Free Cash Flow", "FreeCashFlow"):
+                        if label in cf.index:
+                            fcf_series = cf.loc[label]
+                            out["freeCashFlow"] = float(fcf_series.iloc[0]) if len(fcf_series) else None
+                            break
+            except Exception:
+                pass
+            return out
+
+        return circuit_yfinance.call(_fetch_info)
+    except CircuitOpenError:
+        logger.warning(f"yfinance circuit open for fundamentals: {ticker}")
+        return {"ticker": ticker, "error": "circuit_open"}
+    except Exception as e:
+        logger.warning(f"Failed to fetch fundamentals for {ticker}: {e}")
+        return {"ticker": ticker, "error": str(e)}
 
 
+@cached(ttl=TTL.DAILY, prefix="momentum")
 def get_momentum_metrics(ticker: str) -> dict:
-    """안정적 모멘텀 계산: yfinance download 실패 시 Ticker().history로 폴백."""
+    """안정적 모멘텀 계산 (4시간 캐시, 서킷 브레이커 적용): yfinance download 실패 시 Ticker().history로 폴백."""
     hist = None
     try:
-        hist = yf.download(ticker, period="1y", interval="1d", progress=False, auto_adjust=True)
+        def _download():
+            return yf.download(ticker, period="1y", interval="1d", progress=False, auto_adjust=True)
+        hist = circuit_yfinance.call(_download)
+    except CircuitOpenError:
+        logger.warning(f"yfinance circuit open for momentum: {ticker}")
+        hist = None
     except Exception:
         hist = None
+
     if hist is None or hist.empty:
         try:
-            tk = yf.Ticker(ticker)
-            hist = tk.history(period="1y", interval="1d", auto_adjust=True)
+            def _history():
+                tk = yf.Ticker(ticker)
+                return tk.history(period="1y", interval="1d", auto_adjust=True)
+            hist = circuit_yfinance.call(_history)
+        except CircuitOpenError:
+            logger.warning(f"yfinance circuit open for momentum fallback: {ticker}")
+            hist = None
         except Exception:
             hist = None
+
     if hist is None or hist.empty or "Close" not in hist.columns:
         return {"mom1": None, "mom3": None, "mom6": None, "mom12": None}
     close = hist["Close"].reset_index(drop=True)
@@ -108,7 +160,9 @@ def get_prices_paginated(ticker: str, start: Optional[str], end: Optional[str], 
     return slice_, next_cursor
 
 
+@cached(ttl=TTL.DAILY, prefix="prices_summary")
 def get_prices_summary(ticker: str, period: str = "1y", interval: str = "1d", agg: str = "W") -> dict:
+    """가격 요약 조회 (4시간 캐시)"""
     hist = yf.download(ticker, period=period, interval=interval, progress=False, auto_adjust=True)
     if hist.empty:
         return {"ticker": ticker, "count": 0}

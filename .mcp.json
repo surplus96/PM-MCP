@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "pm-mcp": {
+      "command": "/home/surplus96/projects/PM-MCP/.venv/bin/python",
+      "args": ["-m", "mcp_server.mcp_app"],
+      "env": {
+        "PYTHONPATH": "/home/surplus96/projects/PM-MCP",
+        "OBSIDIAN_VAULT_PATH": "/home/surplus96/projects/PM-MCP/obsidian_vault"
+      }
+    }
+  }
+}

@@ -57,6 +57,10 @@ SCORE_SECTOR_NEUTRAL = os.getenv("SCORE_SECTOR_NEUTRAL", "false").lower() in ("1
 SECTOR_FACTOR_WEIGHTS = os.getenv("SECTOR_FACTOR_WEIGHTS")  # JSON 문자열(섹터별 팩터 가중)
 EVENT_WEIGHTS_PATH = os.getenv("EVENT_WEIGHTS_PATH", os.path.join(os.path.dirname(__file__), "data", "event_weights.json"))
 
+# ---- Scheduler settings ----
+WATCHLIST_PATH = os.getenv("WATCHLIST_PATH", os.path.join(DATA_ROOT, "watchlist.json"))
+SCHEDULER_TIMEZONE = os.getenv("SCHEDULER_TIMEZONE", "Asia/Seoul")
+
 os.makedirs(RAW_PATH, exist_ok=True)
 os.makedirs(INTERIM_PATH, exist_ok=True)
 os.makedirs(PROCESSED_PATH, exist_ok=True)

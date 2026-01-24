@@ -8,12 +8,16 @@ import math
 import pandas as pd
 import yfinance as yf
 
+from mcp_server.tools.cache_manager import cache_manager, TTL, cached
 
+
+# 레거시 호환용 JSON 캐시 디렉토리 (기존 캐시 읽기용)
 CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 
 def _cache_path(name: str) -> str:
+    """레거시 JSON 캐시 경로 (하위 호환용)"""
     return os.path.join(CACHE_DIR, name)
 
 
@@ -51,11 +55,21 @@ def _corr(a: pd.Series, b: pd.Series, window: int) -> Optional[float]:
         return None
 
 
-def compute_basic_metrics(ticker: str, period: str = "2y", interval: str = "1d") -> Dict:
+def compute_basic_metrics(ticker: str, period: str = "2y", interval: str = "1d", use_cache: bool = True) -> Dict:
     """가격 기반 핵심 메트릭 산출: 모멘텀, 변동성, 최대낙폭, SPY 상관.
-    결과는 data/cache/metrics_{TICKER}.json 에 캐시합니다.
+    diskcache 기반 TTL 캐싱 적용 (4시간).
     """
-    cache_file = _cache_path(f"metrics_{ticker}.json")
+    cache_key = f"metrics:{ticker}:{period}:{interval}"
+
+    # 캐시 확인 (TTL 자동 관리)
+    if use_cache:
+        cached_data = cache_manager.get(cache_key)
+        if cached_data is not None:
+            return cached_data
+
+    # 레거시 JSON 캐시 확인 (하위 호환)
+    legacy_cache_file = _cache_path(f"metrics_{ticker}.json")
+
     try:
         hist = yf.download(ticker, period=period, interval=interval, progress=False, auto_adjust=True)
         if hist.empty or "Close" not in hist.columns:
@@ -91,25 +105,49 @@ def compute_basic_metrics(ticker: str, period: str = "2y", interval: str = "1d")
             "corr_spy": corr_spy,
             "asof": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         }
-        with open(cache_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False)
+
+        # diskcache에 저장 (TTL 4시간)
+        if use_cache:
+            cache_manager.set(cache_key, data, TTL.METRICS)
+
+        # 레거시 JSON도 함께 저장 (하위 호환)
+        try:
+            with open(legacy_cache_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False)
+        except Exception:
+            pass
+
         return data
     except Exception:
-        # 캐시가 있으면 반환
-        if os.path.exists(cache_file):
+        # diskcache에서 만료된 데이터라도 있으면 반환
+        stale_data = cache_manager.get(cache_key)
+        if stale_data:
+            return stale_data
+
+        # 레거시 JSON 캐시 폴백
+        if os.path.exists(legacy_cache_file):
             try:
-                with open(cache_file, "r", encoding="utf-8") as f:
+                with open(legacy_cache_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
                 pass
         return {"ticker": ticker}
 
 
-def get_cached_metrics(ticker: str) -> Dict:
-    cache_file = _cache_path(f"metrics_{ticker}.json")
-    if os.path.exists(cache_file):
+def get_cached_metrics(ticker: str, period: str = "2y", interval: str = "1d") -> Dict:
+    """캐시된 메트릭 조회 (diskcache 우선, 레거시 JSON 폴백)"""
+    cache_key = f"metrics:{ticker}:{period}:{interval}"
+
+    # diskcache 확인
+    cached_data = cache_manager.get(cache_key)
+    if cached_data is not None:
+        return cached_data
+
+    # 레거시 JSON 캐시 폴백
+    legacy_cache_file = _cache_path(f"metrics_{ticker}.json")
+    if os.path.exists(legacy_cache_file):
         try:
-            with open(cache_file, "r", encoding="utf-8") as f:
+            with open(legacy_cache_file, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return {"ticker": ticker}
