@@ -11,6 +11,7 @@ from mcp_server.tools.resilience import (
     retry_with_backoff, Timeout, RetryConfig,
     circuit_yfinance, CircuitOpenError
 )
+from mcp_server.tools.yf_utils import normalize_yf_columns
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,8 @@ def _download_prices(ticker: str, start: str, end: str, interval: str) -> pd.Dat
     """yfinance 가격 다운로드 (재시도 + 서킷 브레이커)"""
     def _do_download():
         return yf.download(ticker, start=start, end=end, interval=interval, auto_adjust=True, progress=False)
-    return circuit_yfinance.call(_do_download)
+    df = circuit_yfinance.call(_do_download)
+    return normalize_yf_columns(df)
 
 
 def get_prices(ticker: str, start: Optional[str] = None, end: Optional[str] = None, interval: str = "1d") -> pd.DataFrame:
@@ -118,7 +120,7 @@ def get_momentum_metrics(ticker: str) -> dict:
     try:
         def _download():
             return yf.download(ticker, period="1y", interval="1d", progress=False, auto_adjust=True)
-        hist = circuit_yfinance.call(_download)
+        hist = normalize_yf_columns(circuit_yfinance.call(_download))
     except CircuitOpenError:
         logger.warning(f"yfinance circuit open for momentum: {ticker}")
         hist = None
@@ -130,7 +132,7 @@ def get_momentum_metrics(ticker: str) -> dict:
             def _history():
                 tk = yf.Ticker(ticker)
                 return tk.history(period="1y", interval="1d", auto_adjust=True)
-            hist = circuit_yfinance.call(_history)
+            hist = normalize_yf_columns(circuit_yfinance.call(_history))
         except CircuitOpenError:
             logger.warning(f"yfinance circuit open for momentum fallback: {ticker}")
             hist = None
@@ -163,7 +165,9 @@ def get_prices_paginated(ticker: str, start: Optional[str], end: Optional[str], 
 @cached(ttl=TTL.DAILY, prefix="prices_summary")
 def get_prices_summary(ticker: str, period: str = "1y", interval: str = "1d", agg: str = "W") -> dict:
     """가격 요약 조회 (4시간 캐시)"""
-    hist = yf.download(ticker, period=period, interval=interval, progress=False, auto_adjust=True)
+    hist = normalize_yf_columns(
+        yf.download(ticker, period=period, interval=interval, progress=False, auto_adjust=True)
+    )
     if hist.empty:
         return {"ticker": ticker, "count": 0}
     if agg:

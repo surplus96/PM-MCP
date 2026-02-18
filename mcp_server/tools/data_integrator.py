@@ -81,11 +81,11 @@ class DataIntegrator:
         try:
             summary = get_technical_summary(symbol)
             return {
-                "rsi": summary.get("indicators", {}).get("rsi", {}),
-                "macd": summary.get("indicators", {}).get("macd", {}),
-                "bbands": summary.get("indicators", {}).get("bbands", {}),
-                "signals": summary.get("signals", []),
-                "overall": summary.get("overall_signal", "N/A")
+                "rsi": summary.get("rsi", {}),
+                "macd": summary.get("macd", {}),
+                "bbands": summary.get("bbands", {}),
+                "signals": summary.get("signals", {}),
+                "overall": summary.get("signals", {}).get("overall", "N/A")
             }
         except Exception as e:
             return {"error": str(e), "overall": "N/A"}
@@ -124,35 +124,48 @@ class DataIntegrator:
     def _get_price_data(self, symbol: str) -> Dict:
         """가격 데이터"""
         try:
-            prices = get_prices(symbol, period="3mo")
+            from datetime import timedelta
+            end = datetime.now()
+            start = end - timedelta(days=90)
+            df = get_prices(
+                symbol,
+                start=start.strftime("%Y-%m-%d"),
+                end=end.strftime("%Y-%m-%d"),
+            )
 
-            if prices and len(prices) > 0:
-                latest = prices[-1]
-                first = prices[0]
+            if df is None or df.empty or "Close" not in df.columns:
+                return {"error": "No price data"}
 
-                # 수익률 계산
-                if first.get("close") and latest.get("close"):
-                    returns_3m = ((latest["close"] - first["close"]) / first["close"]) * 100
-                else:
-                    returns_3m = None
+            closes = df["Close"].dropna()
+            if len(closes) < 2:
+                return {"error": "Insufficient price data"}
 
-                # 변동성 계산
-                closes = [p.get("close") for p in prices if p.get("close")]
-                if len(closes) > 1:
-                    import statistics
-                    daily_returns = [(closes[i] - closes[i-1]) / closes[i-1] for i in range(1, len(closes))]
-                    volatility = statistics.stdev(daily_returns) * (252 ** 0.5) * 100  # 연환산
-                else:
-                    volatility = None
+            first_close = float(closes.iloc[0])
+            last_close = float(closes.iloc[-1])
 
-                return {
-                    "latest_price": latest.get("close"),
-                    "latest_date": latest.get("date"),
-                    "returns_3m": round(returns_3m, 2) if returns_3m else None,
-                    "volatility_annual": round(volatility, 2) if volatility else None,
-                    "data_points": len(prices)
-                }
-            return {"error": "No price data"}
+            # 수익률 계산
+            returns_3m = ((last_close - first_close) / first_close) * 100 if first_close > 0 else None
+
+            # 변동성 계산
+            daily_returns = closes.pct_change().dropna()
+            if len(daily_returns) > 1:
+                import statistics
+                volatility = statistics.stdev(daily_returns.tolist()) * (252 ** 0.5) * 100
+            else:
+                volatility = None
+
+            # 날짜 정보
+            latest_date = None
+            if "Date" in df.columns:
+                latest_date = str(df["Date"].iloc[-1])
+
+            return {
+                "latest_price": round(last_close, 2),
+                "latest_date": latest_date,
+                "returns_3m": round(returns_3m, 2) if returns_3m is not None else None,
+                "volatility_annual": round(volatility, 2) if volatility is not None else None,
+                "data_points": len(df)
+            }
         except Exception as e:
             return {"error": str(e)}
 

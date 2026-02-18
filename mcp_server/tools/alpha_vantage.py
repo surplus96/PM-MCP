@@ -15,7 +15,7 @@ import os
 import logging
 import requests
 
-from mcp_server.config import ALPHA_VANTAGE_API_KEY
+from mcp_server.config import ALPHA_VANTAGE_API_KEY, ALPHA_VANTAGE_CALL_DELAY
 from mcp_server.tools.cache_manager import cache_manager, TTL
 from mcp_server.tools.resilience import (
     retry_with_backoff, Timeout, CircuitBreaker, CircuitOpenError
@@ -58,6 +58,15 @@ def _call_api(function: str, symbol: str, **params) -> Dict:
             # Rate limit 경고
             logger.warning(f"Alpha Vantage rate limit: {data['Note']}")
             raise ValueError("Rate limit exceeded")
+        if "Information" in data:
+            logger.warning(f"Alpha Vantage info response for {function} {symbol}: {data['Information'][:120]}")
+            raise ValueError(f"API limit: {data['Information'][:120]}")
+
+        # Diagnostic: warn if no data keys found
+        meta_keys = {"Meta Data", "Error Message", "Note", "Information"}
+        data_keys = [k for k in data.keys() if k not in meta_keys]
+        if not data_keys:
+            logger.warning(f"Alpha Vantage returned no data keys for {function} {symbol}. Keys: {list(data.keys())}")
 
         return data
 
@@ -461,9 +470,14 @@ def get_technical_summary(symbol: str, use_cache: bool = True) -> Dict:
         if cached:
             return cached
 
-    # 각 지표 조회
+    import time
+
+    # 각 지표 조회 with rate-limit delay between API calls.
+    # Cache hits are instant; delays only matter when actual API calls are made.
     rsi = get_rsi(symbol, use_cache=use_cache)
+    time.sleep(ALPHA_VANTAGE_CALL_DELAY)
     macd = get_macd(symbol, use_cache=use_cache)
+    time.sleep(ALPHA_VANTAGE_CALL_DELAY)
     bbands = get_bbands(symbol, use_cache=use_cache)
 
     # 신호 해석

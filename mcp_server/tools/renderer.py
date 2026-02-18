@@ -6,6 +6,7 @@ from mcp_server.config import PRESENT_MPL_STYLE, IMAGE_OUTPUT_DIR
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import yfinance as yf
+from mcp_server.tools.yf_utils import normalize_yf_columns
 
 try:
     plt.style.use(PRESENT_MPL_STYLE)
@@ -49,7 +50,9 @@ def render_price_chart(
     grid_alpha: float = 0.3,
 ) -> str:
     os.makedirs(out_dir, exist_ok=True)
-    hist = yf.download(ticker, period=f"{days}d", interval="1d", progress=False, auto_adjust=True)
+    hist = normalize_yf_columns(
+        yf.download(ticker, period=f"{days}d", interval="1d", progress=False, auto_adjust=True)
+    )
     fig, ax = plt.subplots(figsize=figsize)
     if not hist.empty:
         ax.plot(hist.index, hist["Close"], label=ticker, color=color or "#1f77b4")
@@ -81,7 +84,9 @@ def render_multi_price_chart(
     fig, ax = plt.subplots(figsize=figsize)
     cols = _ensure_colors(len(tickers), colors)
     for i, t in enumerate(tickers):
-        hist = yf.download(t, period=f"{days}d", interval="1d", progress=False, auto_adjust=True)
+        hist = normalize_yf_columns(
+            yf.download(t, period=f"{days}d", interval="1d", progress=False, auto_adjust=True)
+        )
         c = cols[i]
         if not hist.empty:
             ax.plot(hist.index, hist["Close"], label=t, color=c)

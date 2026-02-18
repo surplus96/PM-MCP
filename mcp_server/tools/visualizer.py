@@ -23,6 +23,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 
 from mcp_server.tools.cache_manager import cache_manager, TTL
+from mcp_server.tools.yf_utils import normalize_yf_columns
 
 logger = logging.getLogger(__name__)
 
@@ -68,13 +69,11 @@ def _get_ohlcv(ticker: str, period: str = "6mo", interval: str = "1d") -> pd.Dat
         return pd.DataFrame(cached)
 
     try:
-        data = yf.download(ticker, period=period, interval=interval, progress=False)
+        data = normalize_yf_columns(
+            yf.download(ticker, period=period, interval=interval, progress=False)
+        )
         if data.empty:
             return pd.DataFrame()
-
-        # MultiIndex 처리
-        if isinstance(data.columns, pd.MultiIndex):
-            data.columns = data.columns.get_level_values(0)
 
         data = data.reset_index()
         cache_manager.set(cache_key, data.to_dict('records'), TTL.DAILY)

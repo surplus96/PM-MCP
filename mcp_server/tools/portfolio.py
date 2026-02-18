@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import List, Dict
 import yfinance as yf
 import pandas as pd
+from mcp_server.tools.yf_utils import normalize_yf_columns
 
 
 PHASES = ["적신호", "불안정", "유지", "상승"]
@@ -13,17 +14,13 @@ def evaluate_holdings(tickers: List[str]) -> List[Dict]:
     """
     results = []
     for t in tickers:
-        hist = yf.download(t, period="6mo", interval="1d", progress=False, auto_adjust=True)
+        hist = normalize_yf_columns(
+            yf.download(t, period="6mo", interval="1d", progress=False, auto_adjust=True)
+        )
         if hist.empty or "Close" not in hist.columns:
             results.append({"ticker": t, "phase": "불안정", "note": "no data"})
             continue
-        close_obj = hist["Close"]
-        # yfinance가 다중 컬럼을 반환하는 경우 첫 컬럼 선택
-        if isinstance(close_obj, pd.DataFrame):
-            close_series = close_obj.iloc[:, 0]
-        else:
-            close_series = close_obj
-        df = close_series.to_frame(name="Close").reset_index()
+        df = hist["Close"].to_frame(name="Close").reset_index()
         df["ret20"] = df["Close"].pct_change(20)
         recent = df.iloc[-1]
         ret20 = float(recent.get("ret20", 0) or 0)

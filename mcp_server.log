@@ -1,0 +1,1213 @@
+INFO:     Started server process [3509]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8010 (Press CTRL+C to quit)
+INFO:     160.79.106.16:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.16:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.16:0 - "POST /messages/?session_id=bb9fbee09ef040f0a8813af561c29265 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.16:0 - "POST /messages/?session_id=bb9fbee09ef040f0a8813af561c29265 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.16:0 - "POST /messages/?session_id=bb9fbee09ef040f0a8813af561c29265 HTTP/1.1" 202 Accepted
+[02/11/26 16:32:44] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.16:0 - "POST /messages/?session_id=bb9fbee09ef040f0a8813af561c29265 HTTP/1.1" 202 Accepted
+                    INFO     Processing request of type            server.py:713
+                             ListResourcesRequest                               
+INFO:     160.79.106.16:0 - "POST /messages/?session_id=bb9fbee09ef040f0a8813af561c29265 HTTP/1.1" 202 Accepted
+[02/11/26 16:32:45] INFO     Processing request of type            server.py:713
+                             ListPromptsRequest                                 
+INFO:     160.79.106.70:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.70:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=bbba3522429b47abbe9c32015f978d87 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=bbba3522429b47abbe9c32015f978d87 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=bbba3522429b47abbe9c32015f978d87 HTTP/1.1" 202 Accepted
+[02/11/26 16:34:17] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=bbba3522429b47abbe9c32015f978d87 HTTP/1.1" 202 Accepted
+[02/11/26 16:34:18] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.16:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.16:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.16:0 - "POST /messages/?session_id=0918d7980f2841138a9ecbe2446ae3df HTTP/1.1" 202 Accepted
+INFO:     160.79.106.16:0 - "POST /messages/?session_id=0918d7980f2841138a9ecbe2446ae3df HTTP/1.1" 202 Accepted
+INFO:     160.79.106.16:0 - "POST /messages/?session_id=0918d7980f2841138a9ecbe2446ae3df HTTP/1.1" 202 Accepted
+[02/11/26 16:39:13] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+[02/11/26 16:39:17] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.16:0 - "POST /messages/?session_id=0918d7980f2841138a9ecbe2446ae3df HTTP/1.1" 202 Accepted
+                    INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.116:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.116:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.116:0 - "POST /messages/?session_id=432ab1bfb28a4cdc9ff29d2241779ff9 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.116:0 - "POST /messages/?session_id=432ab1bfb28a4cdc9ff29d2241779ff9 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.116:0 - "POST /messages/?session_id=432ab1bfb28a4cdc9ff29d2241779ff9 HTTP/1.1" 202 Accepted
+[02/11/26 16:39:44] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+                    WARNING  Perplexity failed for 'Solar     news_search.py:165
+                             Energy - First Solar Analysis                      
+                             stocks': InvalidHeader: Invalid                    
+                             leading whitespace, reserved                       
+                             character(s), or return                            
+                             character(s) in header value:                      
+                             'Bearer                                            
+                             pplx-CVVBBwKQsEcFV7RpaROmpfqc0JM                   
+                             12tlsQR3y2Dx5ZxUphDsX\r',                          
+                             falling back to RSS                                
+                    WARNING  Perplexity failed for 'Solar     news_search.py:165
+                             Energy - First Solar Analysis                      
+                             demand': InvalidHeader: Invalid                    
+                             leading whitespace, reserved                       
+                             character(s), or return                            
+                             character(s) in header value:                      
+                             'Bearer                                            
+                             pplx-CVVBBwKQsEcFV7RpaROmpfqc0JM                   
+                             12tlsQR3y2Dx5ZxUphDsX\r',                          
+                             falling back to RSS                                
+[02/11/26 16:39:46] WARNING  CircuitBreaker[perplexity]:       resilience.py:128
+                             closed -> open (threshold                          
+                             reached: 3)                                        
+                    WARNING  Perplexity failed for 'Solar     news_search.py:165
+                             Energy - First Solar Analysis                      
+                             regulation': InvalidHeader:                        
+                             Invalid leading whitespace,                        
+                             reserved character(s), or return                   
+                             character(s) in header value:                      
+                             'Bearer                                            
+                             pplx-CVVBBwKQsEcFV7RpaROmpfqc0JM                   
+                             12tlsQR3y2Dx5ZxUphDsX\r',                          
+                             falling back to RSS                                
+INFO:     160.79.106.116:0 - "POST /messages/?session_id=432ab1bfb28a4cdc9ff29d2241779ff9 HTTP/1.1" 202 Accepted
+[02/11/26 16:39:48] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.126:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.126:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.126:0 - "POST /messages/?session_id=b034bff7a75948419581e03082a7c61c HTTP/1.1" 202 Accepted
+INFO:     160.79.106.126:0 - "POST /messages/?session_id=b034bff7a75948419581e03082a7c61c HTTP/1.1" 202 Accepted
+INFO:     160.79.106.126:0 - "POST /messages/?session_id=b034bff7a75948419581e03082a7c61c HTTP/1.1" 202 Accepted
+[02/11/26 16:40:23] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+[02/11/26 16:40:40] WARNING  Alpha Vantage info response for alpha_vantage.py:62
+                             MACD FSLR: Thank you for using                     
+                             Alpha Vantage! This is a                           
+                             premium endpoint. You may                          
+                             subscribe to any of the premium                    
+                             plans at https://                                  
+                    WARNING  Failed to get MACD for FSLR:   alpha_vantage.py:214
+                             API limit: Thank you for using                     
+                             Alpha Vantage! This is a                           
+                             premium endpoint. You may                          
+                             subscribe to any of the                            
+                             premium plans at https://                          
+[02/11/26 16:40:56] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.126:0 - "POST /messages/?session_id=b034bff7a75948419581e03082a7c61c HTTP/1.1" 202 Accepted
+[02/11/26 16:40:57] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.110:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.110:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.110:0 - "POST /messages/?session_id=f61be2d1467c4ee0b9b765d35cc97c31 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.110:0 - "POST /messages/?session_id=f61be2d1467c4ee0b9b765d35cc97c31 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.110:0 - "POST /messages/?session_id=f61be2d1467c4ee0b9b765d35cc97c31 HTTP/1.1" 202 Accepted
+[02/11/26 16:46:29] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+                    INFO     CircuitBreaker[perplexity]: open  resilience.py:104
+                             -> half-open                                       
+                    WARNING  CircuitBreaker[perplexity]:       resilience.py:125
+                             half-open -> open (failure in                      
+                             half-open)                                         
+                    WARNING  Perplexity failed for 'AI        news_search.py:165
+                             stocks': InvalidHeader: Invalid                    
+                             leading whitespace, reserved                       
+                             character(s), or return                            
+                             character(s) in header value:                      
+                             'Bearer                                            
+                             pplx-CVVBBwKQsEcFV7RpaROmpfqc0JM                   
+                             12tlsQR3y2Dx5ZxUphDsX\r',                          
+                             falling back to RSS                                
+[02/11/26 16:46:30] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: gen ai stocks                         
+[02/11/26 16:46:31] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: machine learning                      
+                             stocks                                             
+[02/11/26 16:46:32] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: semiconductor                         
+                             stocks                                             
+[02/11/26 16:46:33] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: semis stocks                          
+[02/11/26 16:46:34] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: cloud stocks                          
+[02/11/26 16:46:36] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: cybersecurity                         
+                             stocks                                             
+                    WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: renewable energy                      
+                             stocks                                             
+[02/11/26 16:46:38] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: solar stocks                          
+[02/11/26 16:46:39] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: wind stocks                           
+[02/11/26 16:46:40] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: biotech stocks                        
+[02/11/26 16:46:41] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: healthcare stocks                     
+[02/11/26 16:46:43] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: pharma stocks                         
+                    WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: pharmaceuticals                       
+                             stocks                                             
+[02/11/26 16:46:44] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: fintech stocks                        
+[02/11/26 16:46:46] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: payments stocks                       
+[02/11/26 16:46:47] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: payment processing                    
+                             stocks                                             
+[02/11/26 16:46:48] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: digital banking                       
+                             stocks                                             
+[02/11/26 16:46:49] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: neobank stocks                        
+[02/11/26 16:46:50] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: EV stocks                             
+[02/11/26 16:46:51] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: rare disease stocks                   
+[02/11/26 16:46:52] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: orphan drugs stocks                   
+INFO:     160.79.106.110:0 - "POST /messages/?session_id=f61be2d1467c4ee0b9b765d35cc97c31 HTTP/1.1" 202 Accepted
+[02/11/26 16:46:53] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.70:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.70:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=36f716f131534127bd90650901680816 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=36f716f131534127bd90650901680816 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=36f716f131534127bd90650901680816 HTTP/1.1" 202 Accepted
+[02/11/26 16:47:51] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+                    INFO     CircuitBreaker[perplexity]: open  resilience.py:104
+                             -> half-open                                       
+                    WARNING  CircuitBreaker[perplexity]:       resilience.py:125
+                             half-open -> open (failure in                      
+                             half-open)                                         
+                    WARNING  Perplexity failed for 'AI        news_search.py:165
+                             stocks': InvalidHeader: Invalid                    
+                             leading whitespace, reserved                       
+                             character(s), or return                            
+                             character(s) in header value:                      
+                             'Bearer                                            
+                             pplx-CVVBBwKQsEcFV7RpaROmpfqc0JM                   
+                             12tlsQR3y2Dx5ZxUphDsX\r',                          
+                             falling back to RSS                                
+[02/11/26 16:47:52] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: AI demand                             
+[02/11/26 16:47:53] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: AI regulation                         
+[02/11/26 16:48:14] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=36f716f131534127bd90650901680816 HTTP/1.1" 202 Accepted
+[02/11/26 16:48:15] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.107:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.107:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.107:0 - "POST /messages/?session_id=a48198f8638d4202b77785cfcd3dbfcb HTTP/1.1" 202 Accepted
+INFO:     160.79.106.107:0 - "POST /messages/?session_id=a48198f8638d4202b77785cfcd3dbfcb HTTP/1.1" 202 Accepted
+INFO:     160.79.106.107:0 - "POST /messages/?session_id=a48198f8638d4202b77785cfcd3dbfcb HTTP/1.1" 202 Accepted
+[02/11/26 16:48:45] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+                    INFO     CircuitBreaker[perplexity]: open  resilience.py:104
+                             -> half-open                                       
+                    WARNING  CircuitBreaker[perplexity]:       resilience.py:125
+                             half-open -> open (failure in                      
+                             half-open)                                         
+                    WARNING  Perplexity failed for            news_search.py:165
+                             'semiconductor stocks':                            
+                             InvalidHeader: Invalid leading                     
+                             whitespace, reserved                               
+                             character(s), or return                            
+                             character(s) in header value:                      
+                             'Bearer                                            
+                             pplx-CVVBBwKQsEcFV7RpaROmpfqc0JM                   
+                             12tlsQR3y2Dx5ZxUphDsX\r',                          
+                             falling back to RSS                                
+[02/11/26 16:48:46] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: semiconductor                         
+                             demand                                             
+[02/11/26 16:48:48] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: semiconductor                         
+                             regulation                                         
+[02/11/26 16:49:06] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.107:0 - "POST /messages/?session_id=a48198f8638d4202b77785cfcd3dbfcb HTTP/1.1" 202 Accepted
+[02/11/26 16:49:07] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.71:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.71:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.71:0 - "POST /messages/?session_id=04967e55d22a4e5ea03a9c14fca5d08f HTTP/1.1" 202 Accepted
+INFO:     160.79.106.71:0 - "POST /messages/?session_id=04967e55d22a4e5ea03a9c14fca5d08f HTTP/1.1" 202 Accepted
+INFO:     160.79.106.71:0 - "POST /messages/?session_id=04967e55d22a4e5ea03a9c14fca5d08f HTTP/1.1" 202 Accepted
+[02/11/26 16:49:37] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+                    INFO     CircuitBreaker[perplexity]: open  resilience.py:104
+                             -> half-open                                       
+                    WARNING  CircuitBreaker[perplexity]:       resilience.py:125
+                             half-open -> open (failure in                      
+                             half-open)                                         
+                    WARNING  Perplexity failed for 'cloud     news_search.py:165
+                             stocks': InvalidHeader: Invalid                    
+                             leading whitespace, reserved                       
+                             character(s), or return                            
+                             character(s) in header value:                      
+                             'Bearer                                            
+                             pplx-CVVBBwKQsEcFV7RpaROmpfqc0JM                   
+                             12tlsQR3y2Dx5ZxUphDsX\r',                          
+                             falling back to RSS                                
+[02/11/26 16:49:38] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: cloud demand                          
+[02/11/26 16:49:39] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: cloud regulation                      
+[02/11/26 16:49:55] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.71:0 - "POST /messages/?session_id=04967e55d22a4e5ea03a9c14fca5d08f HTTP/1.1" 202 Accepted
+[02/11/26 16:49:56] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.0:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.0:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.0:0 - "POST /messages/?session_id=b2371548cef64b7ca226a5c5d97da351 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.0:0 - "POST /messages/?session_id=b2371548cef64b7ca226a5c5d97da351 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.0:0 - "POST /messages/?session_id=b2371548cef64b7ca226a5c5d97da351 HTTP/1.1" 202 Accepted
+[02/11/26 16:50:26] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+                    INFO     CircuitBreaker[perplexity]: open  resilience.py:104
+                             -> half-open                                       
+                    WARNING  CircuitBreaker[perplexity]:       resilience.py:125
+                             half-open -> open (failure in                      
+                             half-open)                                         
+                    WARNING  Perplexity failed for            news_search.py:165
+                             'cybersecurity stocks':                            
+                             InvalidHeader: Invalid leading                     
+                             whitespace, reserved                               
+                             character(s), or return                            
+                             character(s) in header value:                      
+                             'Bearer                                            
+                             pplx-CVVBBwKQsEcFV7RpaROmpfqc0JM                   
+                             12tlsQR3y2Dx5ZxUphDsX\r',                          
+                             falling back to RSS                                
+[02/11/26 16:50:27] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: cybersecurity                         
+                             demand                                             
+[02/11/26 16:50:29] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: cybersecurity                         
+                             regulation                                         
+[02/11/26 16:50:41] ERROR    $SPLK: possibly delisted; no price   history.py:276
+                             data found  (period=5d) (Yahoo error               
+                             = "No data found, symbol may be                    
+                             delisted")                                         
+[02/11/26 16:50:42] ERROR    $SPLK: possibly delisted; no price   history.py:276
+                             data found  (period=1y) (Yahoo error               
+                             = "No data found, symbol may be                    
+                             delisted")                                         
+[02/11/26 16:50:44] ERROR    $SPLK: possibly delisted; no price   history.py:276
+                             data found  (period=1y) (Yahoo error               
+                             = "No data found, symbol may be                    
+                             delisted")                                         
+                    ERROR                                           multi.py:176
+                             1 Failed download:                                 
+                    ERROR    ['SPLK']: possibly delisted; no price  multi.py:189
+                             data found  (period=1y) (Yahoo error =             
+                             "No data found, symbol may be                      
+                             delisted")                                         
+[02/11/26 16:50:45] ERROR    $SPLK: possibly delisted; no price   history.py:276
+                             data found  (period=1y) (Yahoo error               
+                             = "No data found, symbol may be                    
+                             delisted")                                         
+[02/11/26 16:50:49] ERROR    $SPLK: possibly delisted; no price   history.py:276
+                             data found  (period=1y) (Yahoo error               
+                             = "No data found, symbol may be                    
+                             delisted")                                         
+                    ERROR                                           multi.py:176
+                             1 Failed download:                                 
+                    ERROR    ['SPLK']: possibly delisted; no price  multi.py:189
+                             data found  (period=1y) (Yahoo error =             
+                             "No data found, symbol may be                      
+                             delisted")                                         
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+[02/11/26 16:50:50] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.0:0 - "POST /messages/?session_id=b2371548cef64b7ca226a5c5d97da351 HTTP/1.1" 202 Accepted
+                    INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.70:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.70:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=70209e141eae46e693aa2da93a1ddfae HTTP/1.1" 202 Accepted
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=70209e141eae46e693aa2da93a1ddfae HTTP/1.1" 202 Accepted
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=70209e141eae46e693aa2da93a1ddfae HTTP/1.1" 202 Accepted
+[02/11/26 16:51:21] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+                    INFO     CircuitBreaker[perplexity]: open  resilience.py:104
+                             -> half-open                                       
+                    WARNING  CircuitBreaker[perplexity]:       resilience.py:125
+                             half-open -> open (failure in                      
+                             half-open)                                         
+                    WARNING  Perplexity failed for 'renewable news_search.py:165
+                             energy stocks': InvalidHeader:                     
+                             Invalid leading whitespace,                        
+                             reserved character(s), or return                   
+                             character(s) in header value:                      
+                             'Bearer                                            
+                             pplx-CVVBBwKQsEcFV7RpaROmpfqc0JM                   
+                             12tlsQR3y2Dx5ZxUphDsX\r',                          
+                             falling back to RSS                                
+[02/11/26 16:51:22] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: renewable energy                      
+                             demand                                             
+[02/11/26 16:51:23] WARNING  Perplexity circuit open, falling news_search.py:161
+                             back to RSS: renewable energy                      
+                             regulation                                         
+[02/11/26 16:51:35] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=70209e141eae46e693aa2da93a1ddfae HTTP/1.1" 202 Accepted
+[02/11/26 16:51:36] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.6:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.6:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.6:0 - "POST /messages/?session_id=7278c465e7d6481f8ddebedcefc961f0 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.6:0 - "POST /messages/?session_id=7278c465e7d6481f8ddebedcefc961f0 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.6:0 - "POST /messages/?session_id=7278c465e7d6481f8ddebedcefc961f0 HTTP/1.1" 202 Accepted
+[02/11/26 16:57:57] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+[02/11/26 16:58:00] ERROR    $SPLK: possibly delisted; no price   history.py:276
+                             data found  (period=1y) (Yahoo error               
+                             = "No data found, symbol may be                    
+                             delisted")                                         
+                    ERROR                                           multi.py:176
+                             1 Failed download:                                 
+                    ERROR    ['SPLK']: possibly delisted; no price  multi.py:189
+                             data found  (period=1y) (Yahoo error =             
+                             "No data found, symbol may be                      
+                             delisted")                                         
+[02/11/26 16:58:01] ERROR    $SPLK: possibly delisted; no         history.py:127
+                             timezone found                                     
+                    ERROR                                           multi.py:176
+                             1 Failed download:                                 
+                    ERROR    ['SPLK']: possibly delisted; no        multi.py:189
+                             timezone found                                     
+[02/11/26 16:58:03] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.6:0 - "POST /messages/?session_id=7278c465e7d6481f8ddebedcefc961f0 HTTP/1.1" 202 Accepted
+[02/11/26 16:58:04] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.2:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.2:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.2:0 - "POST /messages/?session_id=2238ddba53304a40bbeb33b3e96ee717 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.2:0 - "POST /messages/?session_id=2238ddba53304a40bbeb33b3e96ee717 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.2:0 - "POST /messages/?session_id=2238ddba53304a40bbeb33b3e96ee717 HTTP/1.1" 202 Accepted
+[02/11/26 16:58:27] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+[02/11/26 16:58:32] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.2:0 - "POST /messages/?session_id=2238ddba53304a40bbeb33b3e96ee717 HTTP/1.1" 202 Accepted
+[02/11/26 16:58:43] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.122:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.122:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.122:0 - "POST /messages/?session_id=53717bb5e7b04a8082d5b9b0bba83dc0 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.122:0 - "POST /messages/?session_id=53717bb5e7b04a8082d5b9b0bba83dc0 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.122:0 - "POST /messages/?session_id=53717bb5e7b04a8082d5b9b0bba83dc0 HTTP/1.1" 202 Accepted
+[02/11/26 17:01:44] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+[02/11/26 17:01:45] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.122:0 - "POST /messages/?session_id=53717bb5e7b04a8082d5b9b0bba83dc0 HTTP/1.1" 202 Accepted
+                    INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.70:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.70:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=0fb7450f1d7d47e9b23c35d8a450a8e1 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=0fb7450f1d7d47e9b23c35d8a450a8e1 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=0fb7450f1d7d47e9b23c35d8a450a8e1 HTTP/1.1" 202 Accepted
+[02/11/26 17:02:14] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+                    INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.70:0 - "POST /messages/?session_id=0fb7450f1d7d47e9b23c35d8a450a8e1 HTTP/1.1" 202 Accepted
+[02/11/26 17:02:15] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     160.79.106.122:0 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     160.79.106.122:0 - "GET /sse HTTP/1.1" 200 OK
+INFO:     160.79.106.122:0 - "POST /messages/?session_id=99878406aefa4d2eab0c86de806fb861 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.122:0 - "POST /messages/?session_id=99878406aefa4d2eab0c86de806fb861 HTTP/1.1" 202 Accepted
+INFO:     160.79.106.122:0 - "POST /messages/?session_id=99878406aefa4d2eab0c86de806fb861 HTTP/1.1" 202 Accepted
+[02/11/26 17:02:36] INFO     Processing request of type            server.py:713
+                             CallToolRequest                                    
+[02/11/26 17:02:52] WARNING  Alpha Vantage info response for alpha_vantage.py:62
+                             MACD FTNT: Thank you for using                     
+                             Alpha Vantage! This is a                           
+                             premium endpoint. You may                          
+                             subscribe to any of the premium                    
+                             plans at https://                                  
+                    WARNING  Failed to get MACD for FTNT:   alpha_vantage.py:214
+                             API limit: Thank you for using                     
+                             Alpha Vantage! This is a                           
+                             premium endpoint. You may                          
+                             subscribe to any of the                            
+                             premium plans at https://                          
+[02/11/26 17:03:08] INFO     Warning: Pandas4Warning:              server.py:703
+                             Timestamp.utcnow is deprecated and                 
+                             will be removed in a future version.               
+                             Use Timestamp.now('UTC') instead.                  
+INFO:     160.79.106.122:0 - "POST /messages/?session_id=99878406aefa4d2eab0c86de806fb861 HTTP/1.1" 202 Accepted
+[02/11/26 17:03:09] INFO     Processing request of type            server.py:713
+                             ListToolsRequest                                   
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3509]

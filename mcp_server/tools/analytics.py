@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import List, Dict, Optional, Tuple
 import yfinance as yf
 from .market_data import get_fundamentals_snapshot, get_momentum_metrics
+from .yf_utils import normalize_yf_columns
 from mcp_server.config import SCORE_WEIGHTS, SCORE_SECTOR_NEUTRAL, SECTOR_FACTOR_WEIGHTS
 
 def _parse_weights(s: str) -> Dict[str, float]:
@@ -29,7 +30,9 @@ def _to_float(x) -> float:
 
 def compute_dip_bonus_by_prices(ticker: str, lookback_days: int = 180) -> float:
     try:
-        hist = yf.download(ticker, period="1y", interval="1d", progress=False, auto_adjust=True)
+        hist = normalize_yf_columns(
+            yf.download(ticker, period="1y", interval="1d", progress=False, auto_adjust=True)
+        )
         if hist.empty:
             return 0.0
         closes = hist["Close"]

@@ -17,6 +17,7 @@ from mcp_server.tools.collect import compute_basic_metrics
 from mcp_server.tools.parse import parse_holdings_text
 import yfinance as yf
 import pandas as pd
+from mcp_server.tools.yf_utils import normalize_yf_columns
 
 mcp = FastMCP(
     "PM-MCP",
@@ -84,14 +85,12 @@ async def portfolio_evaluate_detailed(holdings: List[str]) -> List[Dict]:
 
 def _latest_close(ticker: str) -> float | None:
     try:
-        d = yf.download(ticker, period="5d", interval="1d", progress=False, auto_adjust=True)
+        d = normalize_yf_columns(
+            yf.download(ticker, period="5d", interval="1d", progress=False, auto_adjust=True)
+        )
         if d.empty or "Close" not in d.columns:
             return None
-        close_obj = d["Close"]
-        if isinstance(close_obj, pd.DataFrame):
-            close_series = close_obj.iloc[:, 0]
-        else:
-            close_series = close_obj
+        close_series = d["Close"]
         return float(close_series.dropna().iloc[-1]) if not close_series.empty else None
     except Exception:
         return None
@@ -100,15 +99,12 @@ def _latest_close(ticker: str) -> float | None:
 def _close_near_date(ticker: str, date_str: str) -> float | None:
     try:
         start = date_str
-        d = yf.download(ticker, start=start, period="10d", interval="1d", progress=False, auto_adjust=True)
+        d = normalize_yf_columns(
+            yf.download(ticker, start=start, period="10d", interval="1d", progress=False, auto_adjust=True)
+        )
         if d.empty or "Close" not in d.columns:
             return None
-        close_obj = d["Close"]
-        if isinstance(close_obj, pd.DataFrame):
-            s = close_obj.iloc[:, 0]
-        else:
-            s = close_obj
-        s = s.dropna()
+        s = d["Close"].dropna()
         return float(s.iloc[0]) if not s.empty else None
     except Exception:
         return None
@@ -1698,7 +1694,7 @@ async def data_clean(
     import yfinance as yf
 
     try:
-        data = yf.download(ticker, period=period, progress=False)
+        data = normalize_yf_columns(yf.download(ticker, period=period, progress=False))
         if data.empty:
             return {"error": f"No data for {ticker}"}
         data = data.reset_index()
@@ -1738,15 +1734,11 @@ async def data_check_outliers(ticker: str, period: str = "1y", threshold: float 
     import numpy as np
 
     try:
-        data = yf.download(ticker, period=period, progress=False)
+        data = normalize_yf_columns(yf.download(ticker, period=period, progress=False))
         if data.empty:
             return {"error": f"No data for {ticker}"}
     except Exception as e:
         return {"error": str(e)}
-
-    # 컬럼 처리
-    if isinstance(data.columns, pd.MultiIndex):
-        data.columns = data.columns.get_level_values(0)
 
     close = data["Close"]
     returns = close.pct_change().dropna()
@@ -1800,15 +1792,11 @@ async def data_check_missing(ticker: str, period: str = "1y") -> Dict:
     import yfinance as yf
 
     try:
-        data = yf.download(ticker, period=period, progress=False)
+        data = normalize_yf_columns(yf.download(ticker, period=period, progress=False))
         if data.empty:
             return {"error": f"No data for {ticker}"}
     except Exception as e:
         return {"error": str(e)}
-
-    # 컬럼 처리
-    if isinstance(data.columns, pd.MultiIndex):
-        data.columns = data.columns.get_level_values(0)
 
     price_cols = ["Open", "High", "Low", "Close", "Volume"]
     cols_to_check = [c for c in price_cols if c in data.columns]

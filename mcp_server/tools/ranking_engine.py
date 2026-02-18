@@ -13,6 +13,7 @@ from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 import logging
 import numpy as np
+from mcp_server.tools.yf_utils import normalize_yf_columns
 
 logger = logging.getLogger(__name__)
 
@@ -237,16 +238,14 @@ def detect_market_condition(benchmark: str = "SPY", lookback_days: int = 60) -> 
     """
     try:
         import yfinance as yf
-        import pandas as pd
 
-        hist = yf.download(benchmark, period="6mo", interval="1d", progress=False, auto_adjust=True)
+        hist = normalize_yf_columns(
+            yf.download(benchmark, period="6mo", interval="1d", progress=False, auto_adjust=True)
+        )
         if hist.empty or len(hist) < lookback_days:
             return "neutral"
 
         close = hist["Close"].tail(lookback_days)
-        # DataFrame인 경우 Series로 변환
-        if isinstance(close, pd.DataFrame):
-            close = close.iloc[:, 0]
 
         first_val = float(close.iloc[0])
         last_val = float(close.iloc[-1])
@@ -272,7 +271,9 @@ def get_market_volatility(benchmark: str = "SPY", lookback_days: int = 30) -> fl
     try:
         import yfinance as yf
 
-        hist = yf.download(benchmark, period="3mo", interval="1d", progress=False, auto_adjust=True)
+        hist = normalize_yf_columns(
+            yf.download(benchmark, period="3mo", interval="1d", progress=False, auto_adjust=True)
+        )
         if hist.empty or len(hist) < lookback_days:
             return 0.2  # 기본값 20%
 
@@ -403,7 +404,9 @@ def _calculate_volatility(ticker: str, lookback_days: int = 60) -> Optional[floa
     try:
         import yfinance as yf
 
-        hist = yf.download(ticker, period="6mo", interval="1d", progress=False, auto_adjust=True)
+        hist = normalize_yf_columns(
+            yf.download(ticker, period="6mo", interval="1d", progress=False, auto_adjust=True)
+        )
         if hist.empty or len(hist) < lookback_days:
             return None
 

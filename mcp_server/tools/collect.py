@@ -9,6 +9,7 @@ import pandas as pd
 import yfinance as yf
 
 from mcp_server.tools.cache_manager import cache_manager, TTL, cached
+from mcp_server.tools.yf_utils import normalize_yf_columns
 
 
 # 레거시 호환용 JSON 캐시 디렉토리 (기존 캐시 읽기용)
@@ -71,12 +72,12 @@ def compute_basic_metrics(ticker: str, period: str = "2y", interval: str = "1d",
     legacy_cache_file = _cache_path(f"metrics_{ticker}.json")
 
     try:
-        hist = yf.download(ticker, period=period, interval=interval, progress=False, auto_adjust=True)
+        hist = normalize_yf_columns(
+            yf.download(ticker, period=period, interval=interval, progress=False, auto_adjust=True)
+        )
         if hist.empty or "Close" not in hist.columns:
             raise RuntimeError("no price data")
-        close_obj = hist["Close"]
-        close = close_obj.iloc[:, 0] if isinstance(close_obj, pd.DataFrame) else close_obj
-        close = close.dropna()
+        close = hist["Close"].dropna()
 
         # 모멘텀(일수 기준 대략치): 1M~12M
         mom1 = _pct(close, 21)
@@ -90,8 +91,10 @@ def compute_basic_metrics(ticker: str, period: str = "2y", interval: str = "1d",
         vol60 = _stdev(close, 60)
         dd180 = _max_drawdown(close, 180)
         try:
-            spy = yf.download("SPY", period=period, interval=interval, progress=False, auto_adjust=True)["Close"]
-            spy = spy.iloc[:, 0] if isinstance(spy, pd.DataFrame) else spy
+            spy_df = normalize_yf_columns(
+                yf.download("SPY", period=period, interval=interval, progress=False, auto_adjust=True)
+            )
+            spy = spy_df["Close"]
             corr_spy = _corr(close, spy, 90)
         except Exception:
             corr_spy = None

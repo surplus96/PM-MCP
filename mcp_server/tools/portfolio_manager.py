@@ -24,6 +24,7 @@ import pandas as pd
 
 from mcp_server.tools.cache_manager import cache_manager, TTL
 from mcp_server.tools.market_data import get_prices
+from mcp_server.tools.yf_utils import normalize_yf_columns
 
 logger = logging.getLogger(__name__)
 
@@ -581,12 +582,11 @@ def analyze_correlation(
     prices_dict = {}
     for ticker in tickers:
         try:
-            data = yf.download(ticker, period=period, progress=False)
+            data = normalize_yf_columns(
+                yf.download(ticker, period=period, progress=False)
+            )
             if not data.empty and "Close" in data.columns:
-                close = data["Close"]
-                if isinstance(close, pd.DataFrame):
-                    close = close.iloc[:, 0]
-                prices_dict[ticker] = close
+                prices_dict[ticker] = data["Close"]
         except Exception as e:
             logger.warning(f"Failed to get data for {ticker}: {e}")
 

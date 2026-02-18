@@ -3,6 +3,7 @@ from typing import List, Dict, Optional, Tuple
 import math
 import yfinance as yf
 
+from mcp_server.tools.yf_utils import normalize_yf_columns
 from mcp_server.config import (
     PRESENT_THEME_CHART_DAYS,
     PRESENT_PORTFOLIO_HISTORY_DAYS,
@@ -113,14 +114,11 @@ def present_portfolio_overview(
     rows = []
     for e in evals:
         t = e["ticker"]
-        hist = yf.download(t, period=f"{history_days}d", interval="1d", progress=False, auto_adjust=True)
+        hist = normalize_yf_columns(
+            yf.download(t, period=f"{history_days}d", interval="1d", progress=False, auto_adjust=True)
+        )
         if not hist.empty and "Close" in hist.columns:
-            close_obj = hist["Close"]
-            if hasattr(close_obj, "iloc") and not isinstance(close_obj, list) and getattr(close_obj, "ndim", 1) > 1:
-                # DataFrame -> 첫 컬럼 시리즈로 변환
-                close_series = close_obj.iloc[:, 0]
-            else:
-                close_series = close_obj
+            close_series = hist["Close"]
             try:
                 values = list(close_series.tolist())
             except Exception:
