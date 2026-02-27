@@ -32,8 +32,24 @@ mcp = FastMCP(
 
 # Core tools
 @mcp.tool()
-async def market_get_prices(ticker: str, start: Optional[str] = None, end: Optional[str] = None, interval: str = "1d") -> List[Dict]:
-    df = get_prices(ticker, start=start, end=end, interval=interval)
+async def market_get_prices(ticker: str, start: Optional[str] = None, end: Optional[str] = None, interval: str = "1d", market: str = "US") -> List[Dict]:
+    """가격 데이터 조회 (멀티 마켓 지원).
+
+    Args:
+        ticker: 종목 코드
+        start: 시작일 (YYYY-MM-DD)
+        end: 종료일 (YYYY-MM-DD)
+        interval: 시간 간격 (1d, 1wk, 1mo 등)
+        market: 시장 구분 ("US", "KR")
+
+    Returns:
+        가격 데이터 리스트
+
+    Examples:
+        - 미국 주식: market_get_prices("AAPL", market="US")
+        - 한국 주식: market_get_prices("005930", market="KR") # 삼성전자
+    """
+    df = get_prices(ticker, start=start, end=end, interval=interval, market=market)
     return df.to_dict(orient="records")
 
 
@@ -1824,6 +1840,591 @@ async def data_check_missing(ticker: str, period: str = "1y") -> Dict:
         "by_column": {k: int(v) for k, v in missing_by_col.items()},
         "missing_dates": missing_dates[:20]  # 최대 20개
     }
+
+
+# === Technical Analysis Tools (Phase 1-3) ===
+from mcp_server.tools.technical_indicators import TechnicalFactors, calculate_technical_score
+
+@mcp.tool()
+async def technical_analyze(ticker: str, market: str = "US", period: str = "6mo") -> Dict:
+    """기술적 분석 (10개 지표)
+
+    Args:
+        ticker: 종목 코드
+        market: 시장 구분 ("US", "KR")
+        period: 분석 기간 (6mo, 1y 등)
+
+    Returns:
+        - indicators: 10개 기술적 지표 값
+        - interpretation: 지표 해석
+        - score: 종합 스코어 (0-100)
+
+    Examples:
+        - 미국 주식: technical_analyze("AAPL", market="US")
+        - 한국 주식: technical_analyze("005930", market="KR")
+    """
+    try:
+        # 가격 데이터 조회
+        df = get_prices(ticker, market=market)
+
+        if df.empty:
+            return {"error": f"No data for {ticker}"}
+
+        # 기술적 지표 계산
+        indicators = TechnicalFactors.calculate_all(df)
+
+        if not indicators:
+            return {"error": "Failed to calculate technical indicators"}
+
+        # 해석
+        interpretation = TechnicalFactors.get_factor_interpretation(indicators)
+
+        # 종합 스코어
+        score = calculate_technical_score(df)
+
+        return {
+            "ticker": ticker,
+            "market": market,
+            "indicators": indicators,
+            "interpretation": interpretation,
+            "score": round(score, 2),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Technical analysis failed for {ticker}: {e}")
+        return {"error": str(e)}
+
+
+@mcp.tool()
+async def technical_compare(tickers: List[str], market: str = "US") -> List[Dict]:
+    """여러 종목의 기술적 지표 비교
+
+    Args:
+        tickers: 종목 코드 리스트
+        market: 시장 구분
+
+    Returns:
+        각 종목의 기술적 분석 결과 리스트
+
+    Example:
+        - technical_compare(["AAPL", "MSFT", "GOOGL"], market="US")
+        - technical_compare(["005930", "035420"], market="KR")
+    """
+    results = []
+
+    for ticker in tickers:
+        result = await technical_analyze(ticker, market=market)
+        results.append(result)
+
+    return results
+
+
+# ============================================================
+# Phase 2: 재무 팩터 분석 도구
+# ============================================================
+@mcp.tool()
+async def financial_analyze(ticker: str, market: str = "US") -> Dict:
+    """재무 팩터 분석 (20개)
+
+    Phase 2-1: 재무 지표 확장
+    - 수익성 (5개): ROE, ROA, ROIC, Operating/Net Margin
+    - 재무 건전성 (5개): Debt Ratios, Current/Quick Ratio, Interest Coverage
+    - 효율성 (5개): Asset/Inventory/Receivables Turnover, FCF
+    - 배당 (3개): Dividend Yield, Payout Ratio, Dividend Growth
+    - 성장성 (2개): Revenue/EPS Growth
+
+    Args:
+        ticker: 종목 코드 (예: "AAPL", "005930")
+        market: 시장 구분 ("US", "KR")
+
+    Returns:
+        {
+            "ticker": "AAPL",
+            "market": "US",
+            "factors": {
+                "ROE": 0.45,
+                "ROA": 0.28,
+                ...
+            },
+            "interpretation": {
+                "ROE": "우수한 자기자본 수익률 (45.0%)",
+                ...
+            },
+            "count": 10
+        }
+
+    Examples:
+        - 미국 주식: financial_analyze("AAPL", market="US")
+        - 한국 주식: financial_analyze("005930", market="KR")
+    """
+    try:
+        from mcp_server.tools.financial_factors import FinancialFactors
+
+        # 재무 팩터 계산
+        factors = FinancialFactors.calculate_all(ticker, market)
+
+        # 해석 생성
+        interpretation = FinancialFactors.get_factor_interpretation(factors)
+
+        return {
+            "ticker": ticker,
+            "market": market,
+            "factors": factors,
+            "interpretation": interpretation,
+            "count": len(factors)
+        }
+    except Exception as e:
+        return {"error": str(e), "ticker": ticker, "market": market}
+
+
+@mcp.tool()
+async def sentiment_analyze(ticker: str, market: str = "US", days: int = 7) -> Dict:
+    """감성 분석 (10개)
+
+    Phase 2-2: 감성 분석 팩터
+    - 뉴스 감성 (3개): News Sentiment, News Volume, News Sentiment Std
+    - 공시 분석 (2개): Filing Sentiment, Filing Frequency
+    - 시장 심리 (3개): Put/Call Ratio, Market VIX, Short Interest Ratio
+    - 전문가 의견 (2개): Analyst Rating, Target Price Upside
+
+    Args:
+        ticker: 종목 코드 (예: "AAPL", "005930")
+        market: 시장 구분 ("US", "KR")
+        days: 뉴스 분석 기간 (일)
+
+    Returns:
+        {
+            "ticker": "AAPL",
+            "market": "US",
+            "factors": {
+                "News_Sentiment": 0.35,
+                "Put_Call_Ratio": 0.82,
+                ...
+            },
+            "interpretation": {
+                "News_Sentiment": "긍정적 뉴스 우세 (Bullish)",
+                ...
+            },
+            "sentiment_score": 68.3,
+            "count": 8
+        }
+
+    Examples:
+        - sentiment_analyze("AAPL", market="US")
+        - sentiment_analyze("005930", market="KR", days=14)
+    """
+    try:
+        from mcp_server.tools.sentiment_analysis import SentimentFactors, calculate_sentiment_score
+
+        # 감성 팩터 계산
+        factors = SentimentFactors.calculate_all(ticker, market, days)
+
+        # 해석 생성
+        interpretation = SentimentFactors.get_factor_interpretation(factors)
+
+        # 종합 스코어
+        sentiment_score = calculate_sentiment_score(factors)
+
+        return {
+            "ticker": ticker,
+            "market": market,
+            "factors": factors,
+            "interpretation": interpretation,
+            "sentiment_score": round(sentiment_score, 2),
+            "count": len(factors)
+        }
+    except Exception as e:
+        return {"error": str(e), "ticker": ticker, "market": market}
+
+
+@mcp.tool()
+async def comprehensive_analyze(
+    ticker: str,
+    market: str = "US",
+    include_technical: bool = True,
+    include_financial: bool = True,
+    include_sentiment: bool = True
+) -> Dict:
+    """종합 분석 (최대 46개 팩터)
+
+    Phase 1 + Phase 2 통합 분석
+    - 기술적 지표 (10개): RSI, MACD, ADX, etc. [Phase 1]
+    - 재무 지표 (20개): ROE, ROA, Debt Ratios, etc. [Phase 2-1]
+    - 감성 지표 (10개): News Sentiment, Analyst Rating, etc. [Phase 2-2]
+
+    Args:
+        ticker: 종목 코드
+        market: 시장 구분 ("US", "KR")
+        include_technical: 기술적 분석 포함
+        include_financial: 재무 분석 포함
+        include_sentiment: 감성 분석 포함
+
+    Returns:
+        {
+            "ticker": "AAPL",
+            "market": "US",
+            "timestamp": "2026-02-27T14:00:00Z",
+            "factors": {
+                "technical": {...},  # 10개
+                "financial": {...},  # 20개
+                "sentiment": {...}   # 10개
+            },
+            "interpretation": {...},
+            "composite_score": 75.8,
+            "recommendation": "Buy"
+        }
+
+    Examples:
+        - comprehensive_analyze("AAPL", market="US")
+        - comprehensive_analyze("005930", market="KR", include_technical=False)
+    """
+    try:
+        from datetime import datetime
+        from mcp_server.tools.technical_indicators import TechnicalFactors
+        from mcp_server.tools.financial_factors import FinancialFactors
+        from mcp_server.tools.sentiment_analysis import SentimentFactors, calculate_sentiment_score
+        from mcp_server.tools.market_data import get_prices
+
+        all_factors = {}
+        interpretation = {}
+
+        # 1. 기술적 지표 (10개)
+        if include_technical:
+            try:
+                df = get_prices(ticker, market=market, period="6mo")
+                if not df.empty:
+                    tech_factors = TechnicalFactors.calculate_all(df)
+                    all_factors['technical'] = tech_factors
+
+                    tech_interp = TechnicalFactors.get_factor_interpretation(tech_factors)
+                    interpretation.update(tech_interp)
+            except Exception as e:
+                logger.warning(f"Technical analysis failed: {e}")
+
+        # 2. 재무 지표 (20개)
+        if include_financial:
+            try:
+                fin_factors = FinancialFactors.calculate_all(ticker, market)
+                all_factors['financial'] = fin_factors
+
+                fin_interp = FinancialFactors.get_factor_interpretation(fin_factors)
+                interpretation.update(fin_interp)
+            except Exception as e:
+                logger.warning(f"Financial analysis failed: {e}")
+
+        # 3. 감성 지표 (10개)
+        if include_sentiment:
+            try:
+                sent_factors = SentimentFactors.calculate_all(ticker, market)
+                all_factors['sentiment'] = sent_factors
+
+                sent_interp = SentimentFactors.get_factor_interpretation(sent_factors)
+                interpretation.update(sent_interp)
+            except Exception as e:
+                logger.warning(f"Sentiment analysis failed: {e}")
+
+        # 종합 스코어 계산 (간단한 평균)
+        all_factor_values = []
+        for category in all_factors.values():
+            all_factor_values.extend(category.values())
+
+        if all_factor_values:
+            # 정규화 후 평균 (간단한 구현)
+            composite_score = 50.0  # 기본값
+            try:
+                # 기술적 스코어
+                if 'technical' in all_factors and all_factors['technical']:
+                    from mcp_server.tools.technical_indicators import calculate_technical_score
+                    tech_score = calculate_technical_score(df) if not df.empty else 50
+                else:
+                    tech_score = 50
+
+                # 감성 스코어
+                if 'sentiment' in all_factors:
+                    sent_score = calculate_sentiment_score(all_factors['sentiment'])
+                else:
+                    sent_score = 50
+
+                # 재무 스코어 (간단히 50으로 설정, 추후 개선)
+                fin_score = 50
+
+                composite_score = (tech_score + sent_score + fin_score) / 3
+            except Exception:
+                composite_score = 50.0
+        else:
+            composite_score = 50.0
+
+        # 추천 등급
+        if composite_score >= 70:
+            recommendation = "Strong Buy"
+        elif composite_score >= 60:
+            recommendation = "Buy"
+        elif composite_score >= 40:
+            recommendation = "Hold"
+        elif composite_score >= 30:
+            recommendation = "Sell"
+        else:
+            recommendation = "Strong Sell"
+
+        # 팩터 개수 계산
+        total_count = sum(len(factors) for factors in all_factors.values())
+
+        return {
+            "ticker": ticker,
+            "market": market,
+            "timestamp": datetime.now().isoformat(),
+            "factors": all_factors,
+            "interpretation": interpretation,
+            "composite_score": round(composite_score, 2),
+            "recommendation": recommendation,
+            "total_factors": total_count
+        }
+
+    except Exception as e:
+        return {"error": str(e), "ticker": ticker, "market": market}
+
+
+# ============================================================
+# Phase 2 Week 4: 백테스트 및 팩터 통합 (Backtest + Factor Aggregation)
+# ============================================================
+
+@mcp.tool()
+async def backtest_strategy(
+    ticker: str,
+    market: str = "US",
+    start_date: str = "2023-01-01",
+    end_date: str = "2024-12-31",
+    rebalance_period: int = 30,
+    buy_threshold: float = 60.0,
+    sell_threshold: float = 40.0,
+    initial_capital: float = 10000.0
+) -> Dict:
+    """팩터 기반 백테스트 실행
+
+    Phase 2 Week 4 기능: 팩터 점수 기반 매매 전략 백테스트
+
+    Args:
+        ticker: 종목 코드
+        market: 시장 구분 ("US", "KR")
+        start_date: 시작일 (YYYY-MM-DD)
+        end_date: 종료일 (YYYY-MM-DD)
+        rebalance_period: 리밸런싱 주기 (일)
+        buy_threshold: 매수 임계값 (팩터 점수 0-100)
+        sell_threshold: 매도 임계값
+        initial_capital: 초기 자본
+
+    Returns:
+        {
+            "ticker": "AAPL",
+            "start_date": "2023-01-01",
+            "end_date": "2024-12-31",
+            "initial_capital": 10000,
+            "final_value": 12500,
+            "total_return": 25.0,
+            "performance": {
+                "CAGR": 23.5,
+                "Total_Return": 25.0,
+                "Max_Drawdown": 15.2,
+                "Sharpe_Ratio": 1.35,
+                "Win_Rate": 65.0,
+                "Total_Trades": 12
+            },
+            "benchmark": {
+                "benchmark_ticker": "SPY",
+                "benchmark_return": 18.5,
+                "excess_return": 6.5,
+                "outperformance": true
+            },
+            "trades": [...]
+        }
+
+    Examples:
+        - backtest_strategy("AAPL", market="US", start_date="2023-01-01")
+        - backtest_strategy("005930", market="KR", rebalance_period=60)
+    """
+    try:
+        from mcp_server.tools.backtest_engine import BacktestEngine
+
+        result = BacktestEngine.run_backtest(
+            ticker=ticker,
+            market=market,
+            start_date=start_date,
+            end_date=end_date,
+            rebalance_period=rebalance_period,
+            buy_threshold=buy_threshold,
+            sell_threshold=sell_threshold,
+            initial_capital=initial_capital
+        )
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Backtest failed: {e}")
+        return {
+            "error": str(e),
+            "ticker": ticker,
+            "market": market
+        }
+
+
+@mcp.tool()
+async def rank_stocks(
+    tickers_csv: str,
+    market: str = "US",
+    include_technical: bool = True,
+    include_financial: bool = True,
+    include_sentiment: bool = True
+) -> List[Dict]:
+    """다종목 팩터 기반 랭킹
+
+    Phase 2 Week 4 기능: 여러 종목을 팩터 점수로 비교 및 랭킹
+
+    Args:
+        tickers_csv: 종목 코드 (쉼표 구분, 예: "AAPL,MSFT,GOOGL")
+        market: 시장 구분 ("US", "KR")
+        include_technical: 기술적 팩터 포함
+        include_financial: 재무 팩터 포함
+        include_sentiment: 감성 팩터 포함
+
+    Returns:
+        [
+            {
+                "rank": 1,
+                "ticker": "AAPL",
+                "composite_score": 78.5,
+                "factor_count": 35,
+                "recommendation": "Buy"
+            },
+            ...
+        ]
+
+    Examples:
+        - rank_stocks("AAPL,MSFT,GOOGL", market="US")
+        - rank_stocks("005930,000660,035420", market="KR", include_sentiment=False)
+    """
+    try:
+        from mcp_server.tools.factor_aggregator import FactorAggregator
+
+        tickers = [t.strip() for t in tickers_csv.split(',') if t.strip()]
+
+        if not tickers:
+            return {"error": "No valid tickers provided"}
+
+        results = FactorAggregator.rank_stocks(
+            tickers=tickers,
+            market=market,
+            include_technical=include_technical,
+            include_financial=include_financial,
+            include_sentiment=include_sentiment
+        )
+
+        # 추천 등급 추가
+        for result in results:
+            if 'composite_score' in result:
+                result['recommendation'] = FactorAggregator.get_recommendation(result['composite_score'])
+
+        return results
+
+    except Exception as e:
+        logger.error(f"Stock ranking failed: {e}")
+        return [{"error": str(e)}]
+
+
+@mcp.tool()
+async def theme_analyze_with_factors(
+    theme: str,
+    top_n: int = 5,
+    include_backtest: bool = False,
+    include_sentiment: bool = True,
+    rerank_by_backtest: bool = False,
+    market: str = "US",
+    backtest_start: str = "2024-01-01",
+    backtest_end: str = "2024-12-31",
+    factor_weights: Optional[Dict[str, float]] = None
+) -> Dict:
+    """테마 기반 종합 투자 분석
+
+    Phase 3 Week 1-2 기능: 테마를 입력하면 관련 종목을 발굴하고, 40개 팩터 기반으로 랭킹한 후,
+    선택적으로 백테스트를 실행하여 투자 의견을 제공합니다.
+
+    Week 2 추가: 백테스트 성과 기반 재정렬 기능
+    개선: factor_weights 파라미터 노출로 팩터 가중치 커스터마이징 가능
+
+    Args:
+        theme: 테마 키워드 (예: "AI", "semiconductor", "biotech")
+        top_n: 반환할 상위 종목 수 (기본: 5)
+        include_backtest: 백테스트 실행 여부 (기본: False)
+        include_sentiment: 테마 감성 분석 포함 여부 (기본: True)
+        rerank_by_backtest: 백테스트 성과 기반 재정렬 (Week 2, 기본: False)
+        market: 시장 (US/KR, 기본: US)
+        backtest_start: 백테스트 시작일 (YYYY-MM-DD, 기본: 2024-01-01)
+        backtest_end: 백테스트 종료일 (YYYY-MM-DD, 기본: 2024-12-31)
+        factor_weights: 팩터 가중치 커스터마이징 (예: {"financial": 0.5, "technical": 0.3, "sentiment": 0.2})
+
+    Returns:
+        테마 분석 결과:
+        {
+            "theme": "AI",
+            "market": "US",
+            "total_candidates": 15,
+            "analyzed_stocks": 12,
+            "top_n": 5,
+            "top_stocks": [
+                {
+                    "ticker": "NVDA",
+                    "rank": 1,
+                    "composite_score": 85.2,
+                    "factor_count": 38,
+                    "recommendation": "Strong Buy",
+                    "backtest": {
+                        "total_return": 52.3,
+                        "cagr": 45.2,
+                        "max_drawdown": -18.5,
+                        "sharpe_ratio": 2.1,
+                        "win_rate": 65.0,
+                        "trade_count": 8
+                    }
+                },
+                ...
+            ],
+            "theme_sentiment": {
+                "sentiment_score": 0.68,
+                "sentiment_label": "Bullish",
+                "news_volume": 150,
+                "trending": true
+            },
+            "recommendation": "✅ 'AI' theme is trending with bullish sentiment | ..."
+        }
+
+    Examples:
+        - theme_analyze_with_factors("AI", top_n=5)
+        - theme_analyze_with_factors("semiconductor", top_n=3, include_backtest=True)
+        - theme_analyze_with_factors("반도체", market="KR", top_n=5)
+    """
+    try:
+        from mcp_server.tools.theme_factor_integrator import ThemeFactorIntegrator
+
+        result = ThemeFactorIntegrator.analyze_theme(
+            theme=theme,
+            top_n=top_n,
+            include_backtest=include_backtest,
+            include_sentiment=include_sentiment,
+            rerank_by_backtest=rerank_by_backtest,
+            market=market,
+            backtest_start=backtest_start,
+            backtest_end=backtest_end,
+            factor_weights=factor_weights
+        )
+
+        return result
+
+    except Exception as e:
+        logger.error(f"theme_analyze_with_factors failed: {e}")
+        return {
+            'error': str(e),
+            'theme': theme
+        }
 
 
 if __name__ == "__main__":

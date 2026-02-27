@@ -1,0 +1,58 @@
+{
+  "feature": "phase3-theme-factor-integration",
+  "phase": "archived",
+  "subPhase": "archived",
+  "startedAt": "2026-02-27T17:30:00Z",
+  "completedAt": "2026-02-27T21:00:00Z",
+  "archivedAt": "2026-02-27T21:30:00Z",
+  "lastUpdated": "2026-02-27T21:30:00Z",
+  "matchRate": 91.0,
+  "archivedTo": "docs/archive/2026-02/phase3-theme-factor-integration/",
+  "week1": {
+    "status": "completed",
+    "files": [
+      "mcp_server/tools/theme_factor_integrator.py",
+      "mcp_server/mcp_app.py (theme_analyze_with_factors tool)",
+      "test_phase3_week1.py"
+    ],
+    "testResults": "All 6 tests passed"
+  },
+  "week2": {
+    "status": "completed",
+    "files": [
+      "mcp_server/tools/theme_factor_integrator.py (rerank_by_performance, validate_backtest_quality)",
+      "mcp_server/mcp_app.py (rerank_by_backtest parameter)",
+      "test_phase3_week2.py"
+    ],
+    "testResults": "All 5 tests passed",
+    "note": "Performance-based re-ranking and backtest quality validation implemented"
+  },
+  "week3": {
+    "status": "completed",
+    "files": [
+      "mcp_server/tools/theme_factor_integrator.py (enhanced get_theme_sentiment, enhanced generate_recommendation)",
+      "test_phase3_week3.py"
+    ],
+    "testResults": "All 5 tests passed",
+    "note": "Sentiment momentum, confidence, risk assessment, and structured recommendations implemented"
+  },
+  "week4": {
+    "status": "completed",
+    "files": [
+      "mcp_server/tools/cache_layer.py",
+      "mcp_server/tools/theme_factor_integrator.py (caching integration)",
+      "test_phase3_week4.py"
+    ],
+    "testResults": "All 6 tests passed",
+    "note": "Redis-based caching layer with graceful degradation (optional performance optimization)"
+  },
+  "previousPhases": [
+    {
+      "feature": "phase2-financial-sentiment",
+      "phase": "completed",
+      "completedAt": "2026-02-27T17:30:00Z",
+      "matchRate": 98.5,
+      "reportPath": "docs/04-report/phase2-financial-sentiment.report.md"
+    }
+  ]
+}
