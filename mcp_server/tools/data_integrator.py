@@ -77,7 +77,17 @@ class DataIntegrator:
         return results
 
     def _get_technical_data(self, symbol: str) -> Dict:
-        """기술적 분석 데이터"""
+        """기술적 분석 데이터.
+
+        US → Alpha Vantage (premium endpoints, free-tier는 top-3만).
+        KR → 로컬 계산 (PyKrx OHLCV + ``TechnicalFactors.calculate_all``).
+        Alpha Vantage 는 한국 종목을 지원하지 않으므로 로그가 warning 으로
+        가득 차면서 최종적으로 빈 결과를 반환하던 문제를 FR-K02 경로로 해결.
+        """
+        from mcp_server.tools.yf_utils import detect_market
+
+        if detect_market(symbol) == "KR":
+            return self._get_technical_data_kr(symbol)
         try:
             summary = get_technical_summary(symbol)
             return {
@@ -85,13 +95,93 @@ class DataIntegrator:
                 "macd": summary.get("macd", {}),
                 "bbands": summary.get("bbands", {}),
                 "signals": summary.get("signals", {}),
-                "overall": summary.get("signals", {}).get("overall", "N/A")
+                "overall": summary.get("signals", {}).get("overall", "N/A"),
             }
         except Exception as e:
             return {"error": str(e), "overall": "N/A"}
 
+    def _get_technical_data_kr(self, symbol: str) -> Dict:
+        """KR-path: OHLCV 로컬 계산으로 RSI/MACD/BBands/신호 도출.
+
+        ``TechnicalFactors.calculate_all`` 의 반환 키는 PascalCase 이고
+        각 지표는 지표 고유 단위의 raw 값이다 (RSI 0~100, MACD KRW 단위
+        모멘텀 차 등). 따라서 임계치도 각 지표별로 달라야 한다.
+        """
+        try:
+            from mcp_server.tools.technical_indicators import TechnicalFactors
+            df = get_prices(symbol)
+            if df is None or df.empty:
+                return {"overall": "N/A", "note": "no OHLCV from PyKrx", "source": "pykrx+local"}
+            factors = TechnicalFactors.calculate_all(df)
+
+            rsi_v = factors.get("RSI")
+            macd_v = factors.get("MACD")
+            bb_v = factors.get("BB_Width")
+            adx_v = factors.get("ADX")
+            ma_cross_v = factors.get("MA_Cross")
+
+            def _rsi_label(v):
+                if v is None:
+                    return "N/A"
+                if v >= 70:
+                    return "Overbought"
+                if v <= 30:
+                    return "Oversold"
+                return "Neutral"
+
+            def _sign_label(v, pos="Bullish", neg="Bearish"):
+                if v is None:
+                    return "N/A"
+                if v > 0:
+                    return pos
+                if v < 0:
+                    return neg
+                return "Neutral"
+
+            # 종합 신호: MACD 양수 + RSI 40~70 + ADX>20 → Bullish, MACD 음수 + RSI<50 → Bearish
+            bull_votes = sum([
+                1 if (macd_v or 0) > 0 else 0,
+                1 if (rsi_v or 50) >= 50 and (rsi_v or 50) < 70 else 0,
+                1 if (adx_v or 0) > 20 and (ma_cross_v or 0) > 0 else 0,
+            ])
+            bear_votes = sum([
+                1 if (macd_v or 0) < 0 else 0,
+                1 if (rsi_v or 50) < 50 else 0,
+                1 if (ma_cross_v or 0) < 0 else 0,
+            ])
+            if bull_votes >= 2 and bull_votes > bear_votes:
+                overall = "Bullish"
+                score = min(1.0, 0.3 + 0.2 * bull_votes)
+            elif bear_votes >= 2 and bear_votes > bull_votes:
+                overall = "Bearish"
+                score = -min(1.0, 0.3 + 0.2 * bear_votes)
+            else:
+                overall = "Neutral"
+                score = 0.0
+
+            return {
+                "rsi": {"value": rsi_v, "signal": _rsi_label(rsi_v)},
+                "macd": {"value": macd_v, "signal": _sign_label(macd_v)},
+                "bbands": {"value": bb_v, "signal": "Expanding" if (bb_v or 0) > 20 else "Squeezing"},
+                "adx": {"value": adx_v, "signal": "Trending" if (adx_v or 0) > 20 else "Range"},
+                "signals": {"overall": overall, "score": score},
+                "overall": overall,
+                "source": "pykrx+local",
+            }
+        except Exception as e:  # noqa: BLE001
+            return {"error": str(e), "overall": "N/A", "source": "pykrx+local"}
+
     def _get_fundamental_data(self, symbol: str) -> Dict:
-        """기본적 분석 데이터"""
+        """기본적 분석 데이터.
+
+        US → Finnhub (기존 path).
+        KR → DART (ROE/ROA/Operating_Margin) + PyKrx fundamentals.
+        Finnhub 는 한국 상장사를 커버하지 않으므로 KR 에서는 아예 호출하지 않는다.
+        """
+        from mcp_server.tools.yf_utils import detect_market
+
+        if detect_market(symbol) == "KR":
+            return self._get_fundamental_data_kr(symbol)
         try:
             financials = get_basic_financials(symbol)
             analyst = get_analyst_recommendations(symbol)
@@ -109,8 +199,71 @@ class DataIntegrator:
         except Exception as e:
             return {"error": str(e)}
 
+    def _get_fundamental_data_kr(self, symbol: str) -> Dict:
+        """KR 기본적 분석 — DART + PyKrx 조합."""
+        out: Dict[str, Any] = {"source": "dart+pykrx"}
+        # DART (K-IFRS) — ROE/ROA/Operating_Margin/Net_Margin/Revenue_Growth
+        try:
+            from mcp_server.tools.dart import get_dart_client
+            client = get_dart_client()
+            if client.ready:
+                fin = client.get_financials(symbol)
+                out["profitability"] = {
+                    "roe": fin.get("ROE"),
+                    "roa": fin.get("ROA"),
+                    "operating_margin": fin.get("Operating_Margin"),
+                    "net_margin": fin.get("Net_Margin"),
+                }
+                out["growth"] = {"revenue_growth": fin.get("Revenue_Growth")}
+                out["year"] = fin.get("year")
+        except Exception as e:  # noqa: BLE001
+            out["dart_error"] = str(e)
+
+        # PyKrx fundamentals (PER/PBR/EPS 등 장 마감 기준 스냅샷)
+        try:
+            from mcp_server.tools.kr_market_data import get_kr_adapter
+            snap = get_kr_adapter().get_fundamental(symbol)
+            if snap:
+                out["valuation"] = {
+                    "pe": snap.get("PER"),
+                    "pb": snap.get("PBR"),
+                    "eps": snap.get("EPS"),
+                    "bps": snap.get("BPS"),
+                    "div_yield": snap.get("DIV"),
+                }
+        except Exception as e:  # noqa: BLE001
+            out["pykrx_error"] = str(e)
+
+        # Finnhub 에만 있던 인사이더/애널리스트 필드는 KR 에서 비움 (명시적 표시).
+        out.setdefault("analyst_consensus", {})
+        out.setdefault("analyst_trend", "N/A")
+        out.setdefault("insider_signal", "N/A")
+        return out
+
     def _get_news_sentiment(self, symbol: str) -> Dict:
-        """뉴스 감성 분석"""
+        """뉴스 감성 분석.
+
+        US → Finnhub 기업 뉴스.
+        KR → Google News KR RSS (``news_search_kr``) → ``analyze_ticker_news``.
+        """
+        from mcp_server.tools.yf_utils import detect_market
+
+        if detect_market(symbol) == "KR":
+            try:
+                from mcp_server.tools.news_sentiment import analyze_ticker_news
+                r = analyze_ticker_news(symbol, lookback_days=14)
+                if isinstance(r, dict):
+                    return {
+                        "count": r.get("total", 0),
+                        "sentiment": r.get("sentiment_distribution", {}),
+                        "overall": r.get("overall", "neutral"),
+                        "score": r.get("score", 0),
+                        "period": "14d",
+                        "source": "google-news-kr",
+                    }
+                return {"error": "unexpected KR sentiment shape"}
+            except Exception as e:  # noqa: BLE001
+                return {"error": str(e), "source": "google-news-kr"}
         try:
             news = get_company_news(symbol)
             return {

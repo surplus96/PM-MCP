@@ -3,12 +3,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
 ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 ALPHA_VANTAGE_CALL_DELAY = float(os.getenv("ALPHA_VANTAGE_CALL_DELAY", "15"))  # seconds between calls (free tier: 15, paid: 1)
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
-PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
+
+# ---- LLM (Google AI Studio / Gemma 4) ----
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMMA_MODEL = os.getenv("GEMMA_MODEL", "gemma-4-26b-a4b-it")
 SEC_EDGAR_USER_AGENT = os.getenv("SEC_EDGAR_USER_AGENT", "")
 OBSIDIAN_VAULT_PATH = os.getenv("OBSIDIAN_VAULT_PATH", "./obsidian_vault")
 

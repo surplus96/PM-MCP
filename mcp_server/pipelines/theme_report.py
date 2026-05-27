@@ -5,7 +5,7 @@ from mcp_server.tools.news_search import search_news
 from mcp_server.tools.analytics import rank_tickers_with_fundamentals
 from mcp_server.tools.reports import generate_report
 from mcp_server.tools.obsidian import write_markdown
-from mcp_server.tools.llm import summarize_items_perplexity
+from mcp_server.tools.llm import summarize_items
 from mcp_server.tools.filings import fetch_recent_filings, summarize_filings_items
 
 
@@ -25,7 +25,7 @@ def run_theme_report(theme: str, tickers: List[str]) -> str:
             src = h.get('source') or ''
             url = h.get('url') or ''
             news_lines.append(f"{title} | {src} | {url}")
-    news_summary = summarize_items_perplexity(news_lines, max_sentences=6) if news_lines else ""
+    news_summary = summarize_items(news_lines, max_sentences=6) if news_lines else ""
     if not news_summary:
         news_summary = _fallback_bullets(news_lines)
 

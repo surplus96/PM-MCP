@@ -8,19 +8,19 @@ from mcp_server.tools.portfolio import evaluate_holdings
 from mcp_server.tools.reports import generate_report
 from mcp_server.tools.obsidian import write_markdown
 from mcp_server.tools.filings import fetch_recent_filings, summarize_filings_items
-from mcp_server.tools.llm import summarize_items_perplexity
+from mcp_server.tools.llm import summarize_items
 
 
 def main():
     tickers = ["AAPL", "MSFT", "NVDA"]
 
-    # News (Perplexity 우선, 실패 시 RSS)
+    # News (Google News RSS)
     news = search_news(["AI chips", "cloud growth"], lookback_days=7, max_results=3)
     news_lines = []
     for n in news:
         for h in n.get("hits", [])[:3]:
             news_lines.append(f"{h.get('title')} | {h.get('source')} | {h.get('url')}")
-    news_summary = summarize_items_perplexity(news_lines, max_sentences=6) if news_lines else ""
+    news_summary = summarize_items(news_lines, max_sentences=6) if news_lines else ""
 
     # SEC Filings
     filings_all = []

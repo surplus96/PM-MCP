@@ -13,9 +13,94 @@ import numpy as np
 from typing import Dict, Optional
 import logging
 import yfinance as yf
-from .yf_utils import normalize_ticker_multi_market
+from .yf_utils import normalize_ticker_multi_market, is_yfinance_supported
+from .cache_manager import cached, TTL
 
 logger = logging.getLogger(__name__)
+
+
+def _is_kr(market: str) -> bool:
+    return (market or "US").strip().upper() == "KR"
+
+
+_DART_NEG_TTL = 10 * 60  # 10 min — short cache for failure cases
+
+# Module-level executor so a timed-out DART call leaks its worker
+# thread into the pool background instead of blocking the caller via
+# ``with`` block teardown — that was the silent culprit when the first
+# timeout patch still hung the request.
+from concurrent.futures import ThreadPoolExecutor as _ThreadPool, TimeoutError as _FutureTimeout
+_DART_EXEC = _ThreadPool(max_workers=2, thread_name_prefix="dart-pull")
+
+
+def _dart_financials(ticker: str) -> dict:
+    """24h-cached DART filing pull, shared across calculate_* methods.
+
+    OpenDartReader wraps bare ``requests`` calls with no timeout, so a
+    slow / blocked endpoint can hang a worker for minutes. We submit
+    the pull to a long-lived module-level executor and bail at 8 s.
+
+    Critically we do NOT cancel/shutdown after timeout: future.cancel()
+    is a no-op once the thread has started, and ``with ThreadPoolExecutor:``
+    teardown re-blocks until the worker finishes — which was why the
+    first-cut fix still hung. Letting the worker run to completion in
+    the background is fine: the next call hits the failure-sentinel
+    cache below and never blocks again.
+
+    Successful payloads (with at least one extracted ratio) hit the
+    full TTL.FUNDAMENTAL (24h) cache.
+    """
+    from .cache_manager import cache_manager
+
+    key = f"dart_fin:{ticker}"
+    hit = cache_manager.get(key)
+    if isinstance(hit, dict) and hit:
+        return hit  # works for both real payloads and short-lived failure sentinel
+
+    def _do_pull() -> dict:
+        try:
+            from mcp_server.tools.dart import get_dart_client
+            return get_dart_client().get_financials(ticker) or {}
+        except Exception as e:  # noqa: BLE001
+            logger.debug("DART pull failed for %s: %s", ticker, e)
+            return {}
+
+    fut = _DART_EXEC.submit(_do_pull)
+    try:
+        # OpenDartReader's first call per process pulls a ~10 MB corp_code
+        # mapping then issues several follow-up RPCs to assemble
+        # ``finstate_all``. Live HF probe showed even a single ticker
+        # taking >60 s on the cluster IP, so a tight per-request budget
+        # would never let it land cold. We give it 45 s on first miss
+        # and rely on the 24h cache to keep subsequent loads sub-second.
+        # If it still times out we fall through to the KIS valuation
+        # snapshot (5 fields), which is enough for the Financial card
+        # to render real numbers instead of N/A.
+        result = fut.result(timeout=45.0)
+    except _FutureTimeout:
+        logger.warning("DART pull timed out for %s — short-lived sentinel cached.", ticker)
+        cache_manager.set(key, {"_dart_timeout": True}, ttl=_DART_NEG_TTL)
+        return {}
+    except Exception as e:  # noqa: BLE001
+        logger.warning("DART pull errored for %s: %s", ticker, e)
+        return {}
+
+    has_ratios = isinstance(result, dict) and any(
+        result.get(k) is not None for k in ("ROE", "ROA", "Operating_Margin", "Net_Margin")
+    )
+    if has_ratios:
+        cache_manager.set(key, result, ttl=TTL.FUNDAMENTAL)
+    else:
+        # Sentinel-only or empty — cache the empty state briefly so we
+        # don't pay another 8s round-trip on every retry.
+        cache_manager.set(key, {"_dart_empty": True}, ttl=_DART_NEG_TTL)
+        return {}
+    return result
+
+
+def _kr_financials_or_empty(ticker: str, market: str) -> dict:
+    """Convenience wrapper — returns DART dict only when market is KR."""
+    return _dart_financials(ticker) if _is_kr(market) else {}
 
 
 class FinancialFactors:
@@ -25,6 +110,7 @@ class FinancialFactors:
     # 그룹 1: 수익성 지표 (5개)
     # ============================================================
     @staticmethod
+    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_profit")
     def calculate_profitability(ticker: str, market: str = "US") -> Dict[str, float]:
         """수익성 지표 계산
 
@@ -41,9 +127,29 @@ class FinancialFactors:
                 'Net_Margin': float
             }
         """
+        # KR — DART 우선. DART 한 번 쿼리로 ROE/ROA/Op_Margin/Net_Margin
+        # 4종 채워지므로 yfinance rate-limit이 터져도 표 4/5 건짐. ROIC는
+        # NOPAT 계산이 필요해 DART 단일 호출로는 못 만들어 NaN으로 둔다.
+        if _is_kr(market):
+            d = _dart_financials(ticker)
+            if d.get("ROE") is not None or d.get("Operating_Margin") is not None:
+                return {
+                    "ROE": d.get("ROE", np.nan),
+                    "ROA": d.get("ROA", np.nan),
+                    "ROIC": np.nan,
+                    "Operating_Margin": d.get("Operating_Margin", np.nan),
+                    "Net_Margin": d.get("Net_Margin", np.nan),
+                }
         try:
             # 티커 정규화
             normalized_ticker = normalize_ticker_multi_market(ticker, market)
+            # Skip yfinance for KR special listings (REIT/ETN/A-prefix
+            # alphanumeric codes) — Yahoo doesn't index them, so calling
+            # would burn 5+ HTTP 404s before bailing out. Returning the
+            # empty dict signals "no data here" so downstream sources
+            # (KIS / DART / PyKrx) take over cleanly.
+            if not is_yfinance_supported(ticker, market):
+                return {}
             stock = yf.Ticker(normalized_ticker)
             info = stock.info
 
@@ -115,6 +221,7 @@ class FinancialFactors:
     # 그룹 2: 재무 건전성 지표 (5개)
     # ============================================================
     @staticmethod
+    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_health")
     def calculate_financial_health(ticker: str, market: str = "US") -> Dict[str, float]:
         """재무 건전성 지표 계산
 
@@ -127,8 +234,28 @@ class FinancialFactors:
                 'Debt_to_Asset': float
             }
         """
+        # KR — DART의 자본/자산/부채 항목으로 Debt_to_Equity·Debt_to_Asset
+        # 2종 즉시 산출. Current/Quick/Interest Coverage는 단일 연차
+        # 보고서로는 부족해 NaN.
+        if _is_kr(market):
+            d = _dart_financials(ticker)
+            if d.get("Debt_to_Equity") is not None or d.get("Debt_to_Asset") is not None:
+                return {
+                    "Debt_to_Equity": d.get("Debt_to_Equity", np.nan),
+                    "Current_Ratio": np.nan,
+                    "Quick_Ratio": np.nan,
+                    "Interest_Coverage": np.nan,
+                    "Debt_to_Asset": d.get("Debt_to_Asset", np.nan),
+                }
         try:
             normalized_ticker = normalize_ticker_multi_market(ticker, market)
+            # Skip yfinance for KR special listings (REIT/ETN/A-prefix
+            # alphanumeric codes) — Yahoo doesn't index them, so calling
+            # would burn 5+ HTTP 404s before bailing out. Returning the
+            # empty dict signals "no data here" so downstream sources
+            # (KIS / DART / PyKrx) take over cleanly.
+            if not is_yfinance_supported(ticker, market):
+                return {}
             stock = yf.Ticker(normalized_ticker)
             info = stock.info
             balance = stock.balance_sheet
@@ -191,6 +318,7 @@ class FinancialFactors:
     # 그룹 3: 효율성 지표 (5개)
     # ============================================================
     @staticmethod
+    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_eff")
     def calculate_efficiency(ticker: str, market: str = "US") -> Dict[str, float]:
         """효율성 지표 계산
 
@@ -203,8 +331,27 @@ class FinancialFactors:
                 'FCF_to_Sales': float
             }
         """
+        # KR — DART에서 매출/자산만 있으면 Asset_Turnover 1종 산출.
+        # 나머지는 inventory/receivables 등 분기별 세부가 필요해 NaN.
+        if _is_kr(market):
+            d = _dart_financials(ticker)
+            if d.get("Asset_Turnover") is not None:
+                return {
+                    "Asset_Turnover": d.get("Asset_Turnover", np.nan),
+                    "Inventory_Turnover": np.nan,
+                    "Receivables_Turnover": np.nan,
+                    "Working_Capital_Turnover": np.nan,
+                    "FCF_to_Sales": np.nan,
+                }
         try:
             normalized_ticker = normalize_ticker_multi_market(ticker, market)
+            # Skip yfinance for KR special listings (REIT/ETN/A-prefix
+            # alphanumeric codes) — Yahoo doesn't index them, so calling
+            # would burn 5+ HTTP 404s before bailing out. Returning the
+            # empty dict signals "no data here" so downstream sources
+            # (KIS / DART / PyKrx) take over cleanly.
+            if not is_yfinance_supported(ticker, market):
+                return {}
             stock = yf.Ticker(normalized_ticker)
             info = stock.info
             financials = stock.financials
@@ -304,6 +451,7 @@ class FinancialFactors:
     # 그룹 4: 배당 지표 (3개)
     # ============================================================
     @staticmethod
+    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_div")
     def calculate_dividend(ticker: str, market: str = "US") -> Dict[str, float]:
         """배당 지표 계산
 
@@ -314,8 +462,18 @@ class FinancialFactors:
                 'Dividend_Growth': float
             }
         """
+        # 배당 정보는 DART 정기 보고서에서 직접 추출하기 어렵고
+        # (배당정책은 별도 공시), KIS quote도 dividend yield를 안 줌.
+        # 그냥 yfinance를 시도하되, KR 특수 listing은 단락.
         try:
             normalized_ticker = normalize_ticker_multi_market(ticker, market)
+            # Skip yfinance for KR special listings (REIT/ETN/A-prefix
+            # alphanumeric codes) — Yahoo doesn't index them, so calling
+            # would burn 5+ HTTP 404s before bailing out. Returning the
+            # empty dict signals "no data here" so downstream sources
+            # (KIS / DART / PyKrx) take over cleanly.
+            if not is_yfinance_supported(ticker, market):
+                return {}
             stock = yf.Ticker(normalized_ticker)
             info = stock.info
 
@@ -363,6 +521,7 @@ class FinancialFactors:
     # 그룹 5: 성장성 지표 (2개)
     # ============================================================
     @staticmethod
+    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_growth")
     def calculate_growth(ticker: str, market: str = "US") -> Dict[str, float]:
         """성장성 지표 계산
 
@@ -372,8 +531,25 @@ class FinancialFactors:
                 'EPS_Growth': float
             }
         """
+        # KR — DART의 thstrm vs frmtrm로 YoY 직접 산출. EPS 자체는 없지만
+        # 당기순이익 YoY를 EPS_Growth 근사로 사용 (발행주식수 변동 적은
+        # 일반적 케이스에서 차이 작음).
+        if _is_kr(market):
+            d = _dart_financials(ticker)
+            if d.get("Revenue_Growth") is not None or d.get("EPS_Growth") is not None:
+                return {
+                    "Revenue_Growth": d.get("Revenue_Growth", np.nan),
+                    "EPS_Growth": d.get("EPS_Growth", np.nan),
+                }
         try:
             normalized_ticker = normalize_ticker_multi_market(ticker, market)
+            # Skip yfinance for KR special listings (REIT/ETN/A-prefix
+            # alphanumeric codes) — Yahoo doesn't index them, so calling
+            # would burn 5+ HTTP 404s before bailing out. Returning the
+            # empty dict signals "no data here" so downstream sources
+            # (KIS / DART / PyKrx) take over cleanly.
+            if not is_yfinance_supported(ticker, market):
+                return {}
             stock = yf.Ticker(normalized_ticker)
             info = stock.info
             financials = stock.financials
@@ -422,6 +598,7 @@ class FinancialFactors:
     # 통합 함수
     # ============================================================
     @staticmethod
+    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_all")
     def calculate_all(ticker: str, market: str = "US") -> Dict[str, float]:
         """20개 재무 팩터 통합 계산
 

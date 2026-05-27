@@ -53,8 +53,12 @@ class KoreanMarketAdapter:
 
         try:
             import FinanceDataReader as fdr
-            df = fdr.StockListing(market)
-            logger.info(f"Retrieved {len(df)} stocks from {market}")
+            # FDR doesn't accept ``"ALL"`` — it expects a real market name.
+            # Map ``ALL`` to the umbrella ``"KRX"`` so callers using the
+            # legacy keyword keep working without a noisy log line.
+            fdr_market = "KRX" if market.upper() == "ALL" else market
+            df = fdr.StockListing(fdr_market)
+            logger.info(f"Retrieved {len(df)} stocks from {fdr_market}")
             return df
         except Exception as e:
             logger.error(f"Failed to get stock listing for {market}: {e}")
@@ -120,7 +124,11 @@ class KoreanMarketAdapter:
             end_date = self._normalize_date(end) if end else self._default_end_date()
 
             # PyKrx로 데이터 조회
-            df = stock.get_market_ohlcv(clean_ticker, start_date, end_date)
+            # ⚠️ pykrx 시그니처는 ``get_market_ohlcv(from_date, to_date, ticker)``
+            # 이다. 과거 버전의 ``(ticker, from_date, to_date)`` 순서로 호출하면
+            # pykrx 가 첫 인자를 date 로 해석하다 ``ValueError`` 를 삼키고
+            # 빈 DataFrame 을 돌려줘 정적 ``KRX 로그인 실패`` warning 만 남긴다.
+            df = stock.get_market_ohlcv(start_date, end_date, clean_ticker)
 
             if df.empty:
                 logger.warning(f"No data retrieved for {ticker}")
@@ -160,7 +168,8 @@ class KoreanMarketAdapter:
             date_str = self._normalize_date(date) if date else self._default_end_date()
 
             # 펀더멘털 데이터 조회
-            fundamental = stock.get_market_fundamental(clean_ticker, date_str, date_str)
+            # pykrx signature: get_market_fundamental_by_date(from, to, ticker)
+            fundamental = stock.get_market_fundamental_by_date(date_str, date_str, clean_ticker)
 
             if fundamental.empty:
                 logger.warning(f"No fundamental data for {ticker}")
