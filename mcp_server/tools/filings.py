@@ -3,7 +3,7 @@ from typing import List, Dict, Optional
 import os
 import logging
 import requests
-from .llm import summarize_items_perplexity
+from .llm import summarize_items
 from .cache_manager import cache_manager, TTL
 from .resilience import (
     retry_with_backoff, Timeout, RetryConfig,
@@ -200,7 +200,7 @@ def summarize_filings_items(filings: List[Dict], max_items: int = 6) -> str:
         lines.append(f"{f.get('form')} | {f.get('filingDate')} | {f.get('title') or ''} | {f.get('url')}")
     # 시도: LLM 요약
     try:
-        summary = summarize_items_perplexity(lines, max_sentences=6)
+        summary = summarize_items(lines, max_sentences=6)
         if summary:
             return summary
     except Exception:

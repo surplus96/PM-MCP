@@ -21,7 +21,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 
 from mcp_server.tools.cache_manager import cache_manager, TTL
-from mcp_server.tools.resilience import retry_with_backoff, Timeout, circuit_perplexity
+from mcp_server.tools.resilience import retry_with_backoff, Timeout, RetryConfig, circuit_gemini, CircuitOpenError
 
 logger = logging.getLogger(__name__)
 
@@ -362,17 +362,20 @@ class NewsDeduplicator:
 # LLM 기반 고급 분석
 # ============================================================
 
-@retry_with_backoff(attempts=2, min_wait=1, max_wait=5)
-def _call_perplexity_sentiment(news_items: List[Dict]) -> Dict:
-    """Perplexity API를 사용한 고급 감성 분석"""
-    api_key = os.getenv("PERPLEXITY_API_KEY")
-    if not api_key:
-        raise RuntimeError("PERPLEXITY_API_KEY not set")
+@retry_with_backoff(
+    attempts=RetryConfig.GEMINI["attempts"],
+    min_wait=RetryConfig.GEMINI["min_wait"],
+    max_wait=RetryConfig.GEMINI["max_wait"]
+)
+def _call_gemma_sentiment(news_items: List[Dict]) -> Dict:
+    """Google AI Studio (Gemma 4)를 사용한 고급 감성 분석"""
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    model = os.getenv("GEMMA_MODEL", "gemma-4-26b-a4b-it")
+    base_url = "https://generativelanguage.googleapis.com/v1beta"
 
-    # 뉴스 요약 텍스트 준비
     news_text = "\n".join([
         f"- {item.get('title', '')}: {item.get('snippet', '')[:200]}"
-        for item in news_items[:10]  # 최대 10개
+        for item in news_items[:10]
     ])
 
     prompt = f"""Analyze the sentiment of these news headlines for stock market impact.
@@ -391,32 +394,36 @@ Return JSON with:
 
 Return ONLY valid JSON."""
 
-    url = "https://api.perplexity.ai/chat/completions"
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    model = os.getenv("PERPLEXITY_MODEL", "pplx-70b-online")
-
     payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": "You are a financial news analyst. Analyze sentiment and return JSON only."},
-            {"role": "user", "content": prompt}
+        "systemInstruction": {
+            "parts": [{"text": "You are a financial news analyst. Analyze sentiment and return JSON only."}]
+        },
+        "contents": [
+            {"role": "user", "parts": [{"text": prompt}]}
         ],
-        "temperature": 0.1
+        "generationConfig": {
+            "temperature": 0.1,
+            "maxOutputTokens": 1024,
+        },
     }
 
     def _do_request():
-        resp = requests.post(url, headers=headers, json=payload, timeout=Timeout.PERPLEXITY)
+        url = f"{base_url}/models/{model}:generateContent?key={api_key}"
+        resp = requests.post(url, json=payload, timeout=Timeout.GEMINI)
         resp.raise_for_status()
         return resp.json()
 
-    result = circuit_perplexity.call(_do_request)
-    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+    result = circuit_gemini.call(_do_request)
+    candidates = result.get("candidates", [])
+    content = ""
+    if candidates:
+        parts = candidates[0].get("content", {}).get("parts", [])
+        if parts:
+            content = parts[0].get("text", "")
 
-    # JSON 파싱
     try:
         return json.loads(content)
     except json.JSONDecodeError:
-        # JSON 부분만 추출 시도
         start = content.find('{')
         end = content.rfind('}')
         if start != -1 and end != -1:
@@ -435,7 +442,7 @@ def analyze_with_llm(news_items: List[Dict]) -> Dict[str, Any]:
         LLM 분석 결과
     """
     try:
-        return _call_perplexity_sentiment(news_items)
+        return _call_gemma_sentiment(news_items)
     except Exception as e:
         logger.warning(f"LLM sentiment analysis failed: {e}")
         return {
@@ -623,21 +630,43 @@ def analyze_ticker_news(
     if cached:
         return cached
 
-    # Finnhub 뉴스 우선 시도
-    try:
-        from mcp_server.tools.finnhub_api import get_company_news
-        finnhub_news = get_company_news(ticker)
-        news_items = finnhub_news.get("news", [])
-    except Exception:
-        news_items = []
+    # FR-K12: KR 티커는 Finnhub 을 건너뛰고 곧바로 한국어 RSS (Google News KR)
+    # 로 수집한다. Finnhub 은 국내 상장사를 커버하지 않아 매번 빈 결과가 나오며
+    # fallback 검색 쿼리는 영어 페이지만 뽑아 KR 센티먼트가 왜곡되기 쉽다.
+    from mcp_server.tools.yf_utils import detect_market
+    is_kr = detect_market(ticker) == "KR"
 
-    # Finnhub 실패 시 일반 뉴스 검색
-    if not news_items:
-        from mcp_server.tools.news_search import search_news
-        search_result = search_news([ticker], lookback_days=lookback_days, max_results=20)
-        news_items = []
-        for block in search_result:
-            news_items.extend(block.get("hits", []))
+    news_items: list = []
+    if is_kr:
+        try:
+            from mcp_server.tools.news_search_kr import search_news_kr
+            # 한글 검색이 더 잘 붙도록 ticker + (가능하면) 한글 종목명 병합 쿼리.
+            query = ticker
+            try:
+                from mcp_server.tools.kr_market_data import get_kr_adapter
+                nm = get_kr_adapter().get_ticker_name(ticker) or ""
+                if nm:
+                    query = nm  # 한글명을 우선 쓰면 매칭률이 훨씬 높다
+            except Exception:  # noqa: BLE001
+                pass
+            search_result = search_news_kr([query], lookback_days=lookback_days, max_results=20)
+            for block in search_result:
+                news_items.extend(block.get("hits", []))
+        except Exception:  # noqa: BLE001
+            news_items = []
+    else:
+        # US 경로: Finnhub 우선 → 실패 시 일반 뉴스 검색으로 fallback
+        try:
+            from mcp_server.tools.finnhub_api import get_company_news
+            finnhub_news = get_company_news(ticker)
+            news_items = finnhub_news.get("news", [])
+        except Exception:
+            news_items = []
+        if not news_items:
+            from mcp_server.tools.news_search import search_news
+            search_result = search_news([ticker], lookback_days=lookback_days, max_results=20)
+            for block in search_result:
+                news_items.extend(block.get("hits", []))
 
     # 분석 실행
     result = analyze_news_sentiment(

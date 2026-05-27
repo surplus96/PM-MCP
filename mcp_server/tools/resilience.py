@@ -30,9 +30,13 @@ T = TypeVar("T")
 
 # ===== 타임아웃 설정 =====
 class Timeout:
-    """API별 타임아웃 상수 (초)"""
+    """API별 타임아웃 상수 (초)
+
+    FR-B03: GEMINI=300 (기존 30s 오설정 수정). 환경변수 LLM_TIMEOUT_SEC 로 오버라이드 가능.
+    """
+    import os as _os
     YFINANCE = 30
-    PERPLEXITY = 15
+    GEMINI = int(_os.getenv("LLM_TIMEOUT_SEC", "300"))
     SEC_EDGAR = 20
     RSS = 10
     DEFAULT = 15
@@ -42,7 +46,7 @@ class Timeout:
 class RetryConfig:
     """API별 재시도 설정"""
     YFINANCE = {"attempts": 2, "min_wait": 2, "max_wait": 10}
-    PERPLEXITY = {"attempts": 3, "min_wait": 1, "max_wait": 8}
+    GEMINI = {"attempts": 2, "min_wait": 2, "max_wait": 8}
     SEC_EDGAR = {"attempts": 2, "min_wait": 2, "max_wait": 10}
     RSS = {"attempts": 1, "min_wait": 1, "max_wait": 3}
     DEFAULT = {"attempts": 2, "min_wait": 1, "max_wait": 5}
@@ -215,11 +219,11 @@ def retry_api(api_name: str = "default"):
     """API별 사전 정의된 재시도 설정 적용
 
     Args:
-        api_name: API 이름 (YFINANCE, PERPLEXITY, SEC_EDGAR, RSS, DEFAULT)
+        api_name: API 이름 (YFINANCE, GEMINI, SEC_EDGAR, RSS, DEFAULT)
 
     사용 예시:
-        @retry_api("PERPLEXITY")
-        def search_news(query):
+        @retry_api("GEMINI")
+        def summarize(text):
             ...
     """
     config = getattr(RetryConfig, api_name.upper(), RetryConfig.DEFAULT)
@@ -239,7 +243,7 @@ class FallbackChain:
 
     사용 예시:
         chain = FallbackChain("news")
-        chain.add(fetch_from_perplexity, name="perplexity")
+        chain.add(fetch_from_gemma, name="gemma")
         chain.add(fetch_from_finnhub, name="finnhub")
         chain.add(fetch_from_rss, name="rss")
         chain.set_cache_fallback(get_cached_news)
@@ -351,7 +355,7 @@ def with_timeout(func: Callable[..., T], timeout: float, default: T = None) -> C
 # ===== 서킷 브레이커 인스턴스 =====
 # 주요 API별 서킷 브레이커 사전 생성
 circuit_yfinance = CircuitBreaker.get_instance("yfinance", failure_threshold=5, reset_timeout=60)
-circuit_perplexity = CircuitBreaker.get_instance("perplexity", failure_threshold=3, reset_timeout=30)
+circuit_gemini = CircuitBreaker.get_instance("gemini", failure_threshold=5, reset_timeout=60)
 circuit_sec = CircuitBreaker.get_instance("sec_edgar", failure_threshold=5, reset_timeout=120)
 circuit_rss = CircuitBreaker.get_instance("rss", failure_threshold=10, reset_timeout=30)
 

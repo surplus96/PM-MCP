@@ -13,7 +13,7 @@ from typing import Dict, List, Optional
 import logging
 import feedparser
 import yfinance as yf
-from .yf_utils import normalize_ticker_multi_market
+from .yf_utils import normalize_ticker_multi_market, is_yfinance_supported
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class SentimentFactors:
     # 그룹 1: 뉴스 감성 분석 (3개)
     # ============================================================
     @staticmethod
-    def analyze_news_sentiment(ticker: str, days: int = 7) -> Dict[str, float]:
+    def analyze_news_sentiment(ticker: str, days: int = 7, market: str = "US") -> Dict[str, float]:
         """뉴스 감성 분석
 
         Args:
@@ -54,10 +54,32 @@ class SentimentFactors:
         try:
             analyzer = SentimentIntensityAnalyzer()
 
-            # Google News RSS Feed
-            # 회사명 또는 티커로 검색
-            search_query = f"{ticker} stock"
-            news_url = f"https://news.google.com/rss/search?q={search_query}&hl=en-US&gl=US&ceid=US:en"
+            # Google News RSS Feed — locale-aware for KR vs US (FR-K12).
+            # The previous URL was built with an unescaped space ("ticker stock")
+            # which caused ``URL can't contain control characters`` from
+            # feedparser. We now url-encode the query and switch to Korean
+            # locale + Korean company name when the ticker is KR so the
+            # match rate is meaningful instead of returning empty.
+            import urllib.parse as _urlparse
+            from mcp_server.tools.yf_utils import detect_market
+
+            is_kr = (market or "").upper() == "KR" or detect_market(ticker) == "KR"
+            if is_kr:
+                # Resolve Korean company name when possible — much better
+                # recall than searching the 6-digit code alone.
+                query_text = ticker
+                try:
+                    from mcp_server.tools.kr_market_data import get_kr_adapter
+                    nm = get_kr_adapter().get_ticker_name(ticker) or ""
+                    if nm:
+                        query_text = nm
+                except Exception:  # noqa: BLE001
+                    pass
+                q = _urlparse.quote(query_text)
+                news_url = f"https://news.google.com/rss/search?q={q}&hl=ko&gl=KR&ceid=KR:ko"
+            else:
+                q = _urlparse.quote(f"{ticker} stock")
+                news_url = f"https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en"
 
             try:
                 feed = feedparser.parse(news_url)
@@ -113,6 +135,8 @@ class SentimentFactors:
         # 실제 공시 파싱은 복잡하므로 추후 개선
         try:
             normalized_ticker = normalize_ticker_multi_market(ticker, market)
+            if not is_yfinance_supported(ticker, market):
+                return {}
             stock = yf.Ticker(normalized_ticker)
             info = stock.info
 
@@ -152,6 +176,8 @@ class SentimentFactors:
         """
         try:
             normalized_ticker = normalize_ticker_multi_market(ticker, market)
+            if not is_yfinance_supported(ticker, market):
+                return {}
             stock = yf.Ticker(normalized_ticker)
             info = stock.info
 
@@ -218,6 +244,8 @@ class SentimentFactors:
         """
         try:
             normalized_ticker = normalize_ticker_multi_market(ticker, market)
+            if not is_yfinance_supported(ticker, market):
+                return {}
             stock = yf.Ticker(normalized_ticker)
             info = stock.info
 
@@ -266,8 +294,8 @@ class SentimentFactors:
         factors = {}
 
         try:
-            # 1. 뉴스 감성 (3개)
-            news = SentimentFactors.analyze_news_sentiment(ticker, days)
+            # 1. 뉴스 감성 (3개) — market 전달해 KR 티커는 한국어 RSS 사용
+            news = SentimentFactors.analyze_news_sentiment(ticker, days, market=market)
             factors.update(news)
 
             # 2. 공시 분석 (2개)
