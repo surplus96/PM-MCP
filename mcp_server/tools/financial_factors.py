@@ -48,7 +48,10 @@ def _dart_financials(ticker: str) -> dict:
     from .cache_manager import cache_manager
     from .dart_rest import get_financials as _rest_get
 
-    key = f"dart_fin:{ticker}"
+    # cache prefix bumped to v2 when the dart_rest payload gained
+    # ROIC inputs (PRETAX_INCOME / TAX_EXPENSE / LONG_TERM_DEBT) —
+    # old v1 entries would silently miss the new fields.
+    key = f"dart_fin_v2:{ticker}"
     hit = cache_manager.get(key)
     if isinstance(hit, dict) and hit:
         return hit  # works for both real payloads and short-lived failure sentinel
@@ -81,7 +84,7 @@ def _edgar_financials(ticker: str) -> dict:
     from .cache_manager import cache_manager
     from .sec_edgar_fundamentals import get_financials as _edgar_get
 
-    key = f"edgar_fin:{ticker}"
+    key = f"edgar_fin_v2:{ticker}"  # bumped when ROIC inputs added
     hit = cache_manager.get(key)
     if isinstance(hit, dict) and hit:
         return hit
@@ -115,7 +118,7 @@ class FinancialFactors:
     # 그룹 1: 수익성 지표 (5개)
     # ============================================================
     @staticmethod
-    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_profit")
+    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_profit_v2")
     def calculate_profitability(ticker: str, market: str = "US") -> Dict[str, float]:
         """수익성 지표 계산
 
@@ -132,28 +135,28 @@ class FinancialFactors:
                 'Net_Margin': float
             }
         """
-        # KR — DART 우선. DART 한 번 쿼리로 ROE/ROA/Op_Margin/Net_Margin
-        # 4종 채워지므로 yfinance rate-limit이 터져도 표 4/5 건짐. ROIC는
-        # NOPAT 계산이 필요해 DART 단일 호출로는 못 만들어 NaN으로 둔다.
+        # KR — DART REST returns the full 5-tuple now that NOPAT inputs
+        # (법인세비용 / 법인세차감전순이익 / 장기차입금) are extracted, so
+        # ROIC is no longer NaN. yfinance rate-limit fallback intact.
         if _is_kr(market):
             d = _dart_financials(ticker)
             if d.get("ROE") is not None or d.get("Operating_Margin") is not None:
                 return {
                     "ROE": d.get("ROE", np.nan),
                     "ROA": d.get("ROA", np.nan),
-                    "ROIC": np.nan,
+                    "ROIC": d.get("ROIC", np.nan),
                     "Operating_Margin": d.get("Operating_Margin", np.nan),
                     "Net_Margin": d.get("Net_Margin", np.nan),
                 }
         else:
-            # US — EDGAR first to dodge yfinance rate-limit. Same shape
-            # output as the DART branch; ROIC stays NaN here too.
+            # US — EDGAR XBRL covers all 5 profitability ratios including
+            # ROIC via OperatingIncomeLoss + LongTermDebt + IncomeTaxExpenseBenefit.
             d = _edgar_financials(ticker)
             if d.get("ROE") is not None or d.get("Operating_Margin") is not None:
                 return {
                     "ROE": d.get("ROE", np.nan),
                     "ROA": d.get("ROA", np.nan),
-                    "ROIC": np.nan,
+                    "ROIC": d.get("ROIC", np.nan),
                     "Operating_Margin": d.get("Operating_Margin", np.nan),
                     "Net_Margin": d.get("Net_Margin", np.nan),
                 }
@@ -524,12 +527,23 @@ class FinancialFactors:
             dividend_growth = info.get('fiveYearAvgDividendYield', np.nan)
 
             # Dividend Growth 계산 (직접)
+            # pandas 2.x deprecated ``Series.last('365D')`` in favour of a
+            # boolean index against the DatetimeIndex. Compute the rolling
+            # 12-month window explicitly so the warning stops firing and
+            # the behaviour stays identical (last 365 days vs the 365 days
+            # before that, both summed).
             try:
                 dividends = stock.dividends
                 if not dividends.empty and len(dividends) >= 2:
-                    # 최근 연간 배당 vs 1년 전 배당
-                    recent_year_div = dividends.last('365D').sum()
-                    prev_year_div = dividends.iloc[:-365].last('365D').sum() if len(dividends) > 365 else 0
+                    end_ts = dividends.index.max()
+                    cutoff_recent = end_ts - pd.Timedelta(days=365)
+                    cutoff_prev = end_ts - pd.Timedelta(days=730)
+                    recent_year_div = dividends.loc[dividends.index > cutoff_recent].sum()
+                    prev_year_mask = (
+                        (dividends.index > cutoff_prev)
+                        & (dividends.index <= cutoff_recent)
+                    )
+                    prev_year_div = dividends.loc[prev_year_mask].sum()
 
                     if prev_year_div > 0 and recent_year_div > 0:
                         div_growth = (recent_year_div - prev_year_div) / prev_year_div
@@ -644,7 +658,7 @@ class FinancialFactors:
     # 통합 함수
     # ============================================================
     @staticmethod
-    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_all")
+    @cached(ttl=TTL.FUNDAMENTAL, prefix="ff_all_v2")
     def calculate_all(ticker: str, market: str = "US") -> Dict[str, float]:
         """20개 재무 팩터 통합 계산
 
