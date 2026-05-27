@@ -36,53 +36,28 @@ _DART_EXEC = _ThreadPool(max_workers=2, thread_name_prefix="dart-pull")
 def _dart_financials(ticker: str) -> dict:
     """24h-cached DART filing pull, shared across calculate_* methods.
 
-    OpenDartReader wraps bare ``requests`` calls with no timeout, so a
-    slow / blocked endpoint can hang a worker for minutes. We submit
-    the pull to a long-lived module-level executor and bail at 8 s.
+    Backed by ``mcp_server.tools.dart_rest`` — a single REST round-trip
+    against ``fnlttSinglAcntAll.json`` using a pre-baked corp_code map.
+    Typical cold latency 0.2-0.4 s; the OpenDartReader path it replaces
+    took 30-60 s on cloud egress IPs because it pulled the 10 MB
+    corp_code XML on first call.
 
-    Critically we do NOT cancel/shutdown after timeout: future.cancel()
-    is a no-op once the thread has started, and ``with ThreadPoolExecutor:``
-    teardown re-blocks until the worker finishes — which was why the
-    first-cut fix still hung. Letting the worker run to completion in
-    the background is fine: the next call hits the failure-sentinel
-    cache below and never blocks again.
-
-    Successful payloads (with at least one extracted ratio) hit the
-    full TTL.FUNDAMENTAL (24h) cache.
+    Empty/sentinel results carry a short 10-min TTL so a transient DART
+    hiccup doesn't poison the 24h slot.
     """
     from .cache_manager import cache_manager
+    from .dart_rest import get_financials as _rest_get
 
     key = f"dart_fin:{ticker}"
     hit = cache_manager.get(key)
     if isinstance(hit, dict) and hit:
         return hit  # works for both real payloads and short-lived failure sentinel
 
-    def _do_pull() -> dict:
-        try:
-            from mcp_server.tools.dart import get_dart_client
-            return get_dart_client().get_financials(ticker) or {}
-        except Exception as e:  # noqa: BLE001
-            logger.debug("DART pull failed for %s: %s", ticker, e)
-            return {}
-
-    fut = _DART_EXEC.submit(_do_pull)
     try:
-        # OpenDartReader's first call per process pulls a ~10 MB corp_code
-        # mapping then issues several follow-up RPCs to assemble
-        # ``finstate_all``. Live HF probe showed even a single ticker
-        # taking >60 s on the cluster IP, so a tight per-request budget
-        # would never let it land cold. We give it 45 s on first miss
-        # and rely on the 24h cache to keep subsequent loads sub-second.
-        # If it still times out we fall through to the KIS valuation
-        # snapshot (5 fields), which is enough for the Financial card
-        # to render real numbers instead of N/A.
-        result = fut.result(timeout=45.0)
-    except _FutureTimeout:
-        logger.warning("DART pull timed out for %s — short-lived sentinel cached.", ticker)
-        cache_manager.set(key, {"_dart_timeout": True}, ttl=_DART_NEG_TTL)
-        return {}
+        result = _rest_get(ticker)
     except Exception as e:  # noqa: BLE001
-        logger.warning("DART pull errored for %s: %s", ticker, e)
+        logger.warning("DART REST errored for %s: %s", ticker, e)
+        cache_manager.set(key, {"_dart_empty": True}, ttl=_DART_NEG_TTL)
         return {}
 
     has_ratios = isinstance(result, dict) and any(
@@ -90,12 +65,42 @@ def _dart_financials(ticker: str) -> dict:
     )
     if has_ratios:
         cache_manager.set(key, result, ttl=TTL.FUNDAMENTAL)
-    else:
-        # Sentinel-only or empty — cache the empty state briefly so we
-        # don't pay another 8s round-trip on every retry.
-        cache_manager.set(key, {"_dart_empty": True}, ttl=_DART_NEG_TTL)
+        return result
+    cache_manager.set(key, {"_dart_empty": True}, ttl=_DART_NEG_TTL)
+    return {}
+
+
+def _edgar_financials(ticker: str) -> dict:
+    """24h-cached SEC EDGAR XBRL pull for US issuers.
+
+    Mirror of ``_dart_financials`` but for the US market. EDGAR has no
+    rate limit beyond the 10 req/sec ceiling, so unlike yfinance there
+    is no risk of getting silently throttled across an entire chat
+    session. Typical cold latency 0.4-0.8 s; warm cache → sub-millisecond.
+    """
+    from .cache_manager import cache_manager
+    from .sec_edgar_fundamentals import get_financials as _edgar_get
+
+    key = f"edgar_fin:{ticker}"
+    hit = cache_manager.get(key)
+    if isinstance(hit, dict) and hit:
+        return hit
+
+    try:
+        result = _edgar_get(ticker)
+    except Exception as e:  # noqa: BLE001
+        logger.warning("EDGAR fetch errored for %s: %s", ticker, e)
+        cache_manager.set(key, {"_edgar_empty": True}, ttl=_DART_NEG_TTL)
         return {}
-    return result
+
+    has_ratios = isinstance(result, dict) and any(
+        result.get(k) is not None for k in ("ROE", "ROA", "Operating_Margin", "Net_Margin")
+    )
+    if has_ratios:
+        cache_manager.set(key, result, ttl=TTL.FUNDAMENTAL)
+        return result
+    cache_manager.set(key, {"_edgar_empty": True}, ttl=_DART_NEG_TTL)
+    return {}
 
 
 def _kr_financials_or_empty(ticker: str, market: str) -> dict:
@@ -132,6 +137,18 @@ class FinancialFactors:
         # NOPAT 계산이 필요해 DART 단일 호출로는 못 만들어 NaN으로 둔다.
         if _is_kr(market):
             d = _dart_financials(ticker)
+            if d.get("ROE") is not None or d.get("Operating_Margin") is not None:
+                return {
+                    "ROE": d.get("ROE", np.nan),
+                    "ROA": d.get("ROA", np.nan),
+                    "ROIC": np.nan,
+                    "Operating_Margin": d.get("Operating_Margin", np.nan),
+                    "Net_Margin": d.get("Net_Margin", np.nan),
+                }
+        else:
+            # US — EDGAR first to dodge yfinance rate-limit. Same shape
+            # output as the DART branch; ROIC stays NaN here too.
+            d = _edgar_financials(ticker)
             if d.get("ROE") is not None or d.get("Operating_Margin") is not None:
                 return {
                     "ROE": d.get("ROE", np.nan),
@@ -247,6 +264,16 @@ class FinancialFactors:
                     "Interest_Coverage": np.nan,
                     "Debt_to_Asset": d.get("Debt_to_Asset", np.nan),
                 }
+        else:
+            d = _edgar_financials(ticker)
+            if d.get("Debt_to_Equity") is not None or d.get("Debt_to_Asset") is not None:
+                return {
+                    "Debt_to_Equity": d.get("Debt_to_Equity", np.nan),
+                    "Current_Ratio": np.nan,
+                    "Quick_Ratio": np.nan,
+                    "Interest_Coverage": np.nan,
+                    "Debt_to_Asset": d.get("Debt_to_Asset", np.nan),
+                }
         try:
             normalized_ticker = normalize_ticker_multi_market(ticker, market)
             # Skip yfinance for KR special listings (REIT/ETN/A-prefix
@@ -335,6 +362,16 @@ class FinancialFactors:
         # 나머지는 inventory/receivables 등 분기별 세부가 필요해 NaN.
         if _is_kr(market):
             d = _dart_financials(ticker)
+            if d.get("Asset_Turnover") is not None:
+                return {
+                    "Asset_Turnover": d.get("Asset_Turnover", np.nan),
+                    "Inventory_Turnover": np.nan,
+                    "Receivables_Turnover": np.nan,
+                    "Working_Capital_Turnover": np.nan,
+                    "FCF_to_Sales": np.nan,
+                }
+        else:
+            d = _edgar_financials(ticker)
             if d.get("Asset_Turnover") is not None:
                 return {
                     "Asset_Turnover": d.get("Asset_Turnover", np.nan),
@@ -536,6 +573,15 @@ class FinancialFactors:
         # 일반적 케이스에서 차이 작음).
         if _is_kr(market):
             d = _dart_financials(ticker)
+            if d.get("Revenue_Growth") is not None or d.get("EPS_Growth") is not None:
+                return {
+                    "Revenue_Growth": d.get("Revenue_Growth", np.nan),
+                    "EPS_Growth": d.get("EPS_Growth", np.nan),
+                }
+        else:
+            # US — EDGAR has proper per-share EPS so EPS_Growth here is
+            # not a net-income proxy but the real YoY change.
+            d = _edgar_financials(ticker)
             if d.get("Revenue_Growth") is not None or d.get("EPS_Growth") is not None:
                 return {
                     "Revenue_Growth": d.get("Revenue_Growth", np.nan),
